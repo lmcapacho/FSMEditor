@@ -98,6 +98,9 @@ constraints and test scope.
 
 ## Credits and license
 
-Attribution and licensing will be added after rights ownership has been
-reviewed. Until then, this repository does not grant permissions beyond those
-provided by applicable law.
+FSM Editor originated from an undergraduate thesis project developed by Genesis
+Marcela Labrador Laguado under the direction of Luis Miguel Capacho. Subsequent
+development is maintained in this repository.
+
+This project is licensed under the [MIT License](LICENSE). Copyright notices
+for both contributors are included in the license text.
