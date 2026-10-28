@@ -1,0 +1,118 @@
+/* =========================================================================
+ * icestudio.js - Icestudio export.
+ *   buildIce(machine) -> .ice object (one basic.code block and ports)
+ *   iceText(machine)  -> serialized object
+ *
+ * The .ice schema targets Icestudio 2.x. Minor fields may need adjustment for
+ * a particular version; the code block and ports are the stable part.
+ * Exposes the global `ICE` object.
+ * ========================================================================= */
+(function (global) {
+  'use strict';
+
+  function uuid() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      var r = (Math.random() * 16) | 0;
+      var v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
+  function rangeStr(width) { return width > 1 ? ('[' + (width - 1) + ':0]') : ''; }
+
+  function buildIce(machine) {
+    var blocks = [];
+    var wires = [];
+    var code = VERILOG.generateBody(machine);
+
+    var codeId = uuid();
+    var inPorts = [];
+    var yLeft = 40;
+    var STEP = 64;
+
+    function addInputBlock(name, width, isClock) {
+      var id = uuid();
+      blocks.push({
+        id: id,
+        type: 'basic.input',
+        data: {
+          name: name,
+          range: rangeStr(width),
+          size: width > 1 ? width : undefined,
+          clock: !!isClock,
+          virtual: true
+        },
+        position: { x: 40, y: yLeft },
+        size: { width: 96, height: 32 }
+      });
+      wires.push({
+        source: { block: id, port: 'out' },
+        target: { block: codeId, port: name },
+        size: width > 1 ? width : undefined
+      });
+      inPorts.push(width > 1 ? { name: name, range: rangeStr(width), size: width } : { name: name });
+      yLeft += STEP;
+    }
+
+    addInputBlock(machine.clock, 1, true);
+    addInputBlock(machine.reset, 1, false);
+    machine.inputs.forEach(function (p) { addInputBlock(p.name, p.width, false); });
+
+    var outPorts = [];
+    var yRight = 40;
+    machine.outputs.forEach(function (p) {
+      var id = uuid();
+      blocks.push({
+        id: id,
+        type: 'basic.output',
+        data: { name: p.name, range: rangeStr(p.width), size: p.width > 1 ? p.width : undefined, virtual: true },
+        position: { x: 760, y: yRight },
+        size: { width: 96, height: 32 }
+      });
+      wires.push({
+        source: { block: codeId, port: p.name },
+        target: { block: id, port: 'in' },
+        size: p.width > 1 ? p.width : undefined
+      });
+      outPorts.push(p.width > 1 ? { name: p.name, range: rangeStr(p.width), size: p.width } : { name: p.name });
+      yRight += STEP;
+    });
+
+    blocks.push({
+      id: codeId,
+      type: 'basic.code',
+      data: {
+        code: code,
+        params: [],
+        ports: { in: inPorts, out: outPorts }
+      },
+      position: { x: 220, y: 40 },
+      size: { width: 480, height: Math.max(320, 40 + Math.max(inPorts.length, outPorts.length) * STEP) }
+    });
+
+    return {
+      version: '1.2',
+      package: {
+        name: machine.name,
+        version: '0.1.0',
+        description: 'Maquina de estados (' + machine.states.length + ' estados, ' + machine.encoding + ') generada por FSM Editor',
+        author: '',
+        image: ''
+      },
+      design: {
+        board: '',
+        graph: { blocks: blocks, wires: wires }
+      },
+      dependencies: {}
+    };
+  }
+
+  function iceText(machine) {
+    return JSON.stringify(buildIce(machine), null, 2);
+  }
+
+  global.ICE = {
+    buildIce: buildIce,
+    iceText: iceText
+  };
+}(window));

@@ -1,0 +1,12 @@
+{
+  "manifest_ver": "1.0",
+  "id": "fsm-editor",
+  "name": "FSM Editor",
+  "author": {
+    "name": "Genesis Marcela Labrador Laguado"
+  },
+  "version": "1.0.0",
+  "icon": "icon.svg",
+  "width": 1180,
+  "height": 760
+}

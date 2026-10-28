@@ -1,0 +1,37 @@
+{
+  "name": "fsm-editor",
+  "version": "0.1.0",
+  "private": true,
+  "main": "electron/main.cjs",
+  "description": "Visual finite-state-machine editor with Verilog and Icestudio export",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test:core": "node --test test/core.test.mjs",
+    "test:ui": "node --test test/ui.test.mjs",
+    "test": "node --test \"test/*.test.mjs\"",
+    "serve": "python -m http.server 8080",
+    "desktop": "electron .",
+    "package:desktop": "electron-forge package",
+    "make:desktop": "electron-forge make"
+  },
+  "config": {
+    "forge": {
+      "packagerConfig": {
+        "asar": true
+      },
+      "makers": [
+        {
+          "name": "@electron-forge/maker-zip"
+        }
+      ]
+    }
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^8.0.1",
+    "@electron-forge/maker-zip": "^8.0.1",
+    "electron": "^45.0.0",
+    "playwright": "1.62.1"
+  }
+}
