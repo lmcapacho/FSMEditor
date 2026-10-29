@@ -37,13 +37,13 @@ jobs:
         include:
           - os: ubuntu-latest
             label: Linux
-            artifact: desktop-linux
+            artifact: fsm-editor-desktop-linux
           - os: windows-latest
             label: Windows
-            artifact: desktop-windows
+            artifact: fsm-editor-desktop-windows
           - os: macos-latest
             label: macOS
-            artifact: desktop-macos
+            artifact: fsm-editor-desktop-macos
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
@@ -59,7 +59,7 @@ jobs:
         run: npm run make:desktop
 
       - name: Upload desktop ZIP
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.artifact }}
           path: out/make/**/*.zip
@@ -81,9 +81,9 @@ jobs:
           zip -r "fsm-editor-plugin-${GITHUB_REF_NAME}.zip" fsm-editor
 
       - name: Upload plugin ZIP
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
-          name: icestudio-plugin
+          name: fsm-editor-icestudio-plugin
           path: dist/fsm-editor-plugin-*.zip
           if-no-files-found: error
 
@@ -96,7 +96,7 @@ jobs:
       contents: write
     steps:
       - name: Download release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: dist
           merge-multiple: true
