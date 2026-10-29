@@ -5,6 +5,8 @@ machines. It works as a static web application and as an Icestudio external
 plugin. Draw states and transitions, validate the machine, and export
 Verilog-2001 or an `.ice` block.
 
+![FSM Editor interface](docs/images/fsm-editor-overview.png)
+
 ## Usage
 
 Open `index.html` in a modern browser. No installation or server is required.
