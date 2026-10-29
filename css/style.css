@@ -2,21 +2,22 @@
  * style.css - FSM Editor
  * ========================================================================= */
 :root {
-  --bg: #11151c;
-  --panel: #171d26;
-  --panel-2: #1e2733;
-  --line: #2c3846;
-  --text: #dfe6ef;
-  --muted: #8a97a8;
-  --accent: #4c9be8;
-  --accent-2: #2f6fb0;
-  --ok: #57b36b;
-  --warn: #d9a441;
-  --bad: #e2564f;
-  --state: #223247;
-  --state-stroke: #4c9be8;
-  --edge: #9fb0c3;
-  --init: #3ea6ff;   /* flecha de estado inicial (azul brillante) */
+  --bg: #101722;
+  --panel: #172131;
+  --panel-2: #202d3e;
+  --line: #33465c;
+  --text: #e5edf7;
+  --muted: #96a6b9;
+  --accent: #22d3ee;
+  --accent-2: #0e7490;
+  --focus: #67e8f9;
+  --ok: #34d399;
+  --warn: #fbbf24;
+  --bad: #fb7185;
+  --state: #20364d;
+  --state-stroke: #3b82f6;
+  --edge: #afc0d3;
+  --init: #67e8f9;   /* bright cyan initial-state arrow */
 }
 
 * { box-sizing: border-box; }
@@ -237,9 +238,9 @@ p.muted { margin: 4px 0; }
   fill: var(--state); stroke: var(--state-stroke); stroke-width: 2;
 }
 .layer-nodes .state .halo { fill: none; stroke: transparent; stroke-width: 20; pointer-events: stroke; cursor: crosshair; }
-.layer-nodes .state:hover .body { filter: brightness(1.25); }
-.layer-nodes .state.hover .body { stroke: var(--ok); }
-.layer-nodes .state.selected .body { stroke: #fff; stroke-width: 3; }
+.layer-nodes .state:hover .body { filter: brightness(1.18); }
+.layer-nodes .state.hover .body { stroke: var(--focus); }
+.layer-nodes .state.selected .body { stroke: var(--accent); stroke-width: 3; }
 .layer-nodes .state .init-head { fill: var(--init); stroke: #fff; stroke-width: 1; stroke-linejoin: round; pointer-events: none; }
 .layer-nodes .state .name { fill: var(--text); font-weight: 600; font-size: 14px; pointer-events: none; }
 .layer-nodes .state .moore { fill: var(--warn); font-size: 11px; pointer-events: none; }
@@ -247,10 +248,10 @@ p.muted { margin: 4px 0; }
 .layer-edges .edge .line { stroke: var(--edge); stroke-width: 2; }
 .layer-edges .edge .head { fill: var(--edge); }
 .layer-edges .edge .hit { stroke: transparent; stroke-width: 16; cursor: grab; }
-.layer-edges .edge:hover .line { stroke: #cfe0f2; }
-.layer-edges .edge:hover .head { stroke: #cfe0f2; fill: #cfe0f2; }
-.layer-edges .edge.selected .line { stroke: #fff; stroke-width: 3; }
-.layer-edges .edge.selected .head { fill: #fff; }
+.layer-edges .edge:hover .line { stroke: var(--focus); }
+.layer-edges .edge:hover .head { stroke: var(--focus); fill: var(--focus); }
+.layer-edges .edge.selected .line { stroke: var(--accent); stroke-width: 3; }
+.layer-edges .edge.selected .head { fill: var(--accent); }
 .layer-edges .edge-label { fill: var(--text); font-size: 12px; font-family: "Cascadia Code", Consolas, ui-monospace, monospace; pointer-events: none; }
 .layer-edges .edge-label-bg { fill: var(--bg); opacity: .85; rx: 3; pointer-events: none; }
 .layer-edges .edge .curve-handle {
