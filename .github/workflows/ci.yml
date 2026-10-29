@@ -76,7 +76,7 @@ jobs:
       - name: Create plugin ZIP
         run: |
           mkdir -p dist/fsm-editor
-          cp -r index.html css js manifest.json icon.svg README.md dist/fsm-editor/
+          cp -r index.html css js examples manifest.json icon.svg README.md dist/fsm-editor/
           cd dist
           zip -r "fsm-editor-plugin-${GITHUB_REF_NAME}.zip" fsm-editor
 

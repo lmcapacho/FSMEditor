@@ -221,10 +221,20 @@ test('FSM.EXAMPLES: ids unicos y cada ejemplo valida sin errores', () => {
   const ids = FSM.EXAMPLES.map((e) => e.id);
   assert.equal(new Set(ids).size, ids.length, 'ids de ejemplo duplicados');
   FSM.EXAMPLES.forEach((ex) => {
-    const m = ex.build();
+    const m = FSM.exampleMachine(ex.id);
     assert.deepEqual(errorsOf(m), [], ex.id + ': no deberia tener errores');
     assert.ok(m.states.length > 0, ex.id + ': deberia tener estados');
   });
+});
+
+test('example machines are independent copies of read-only definitions', () => {
+  const first = FSM.exampleMachine('detector101');
+  const second = FSM.exampleMachine('detector101');
+  first.name = 'changed_locally';
+  first.states[0].name = 'CHANGED';
+  assert.equal(second.name, 'detector_101');
+  assert.equal(second.states[0].name, 'S0');
+  assert.ok(Object.isFrozen(FSM.EXAMPLES[0]));
 });
 
 test('semaforo: 3 estados en ciclo, una salida Moore por estado', () => {
@@ -234,12 +244,12 @@ test('semaforo: 3 estados en ciclo, una salida Moore por estado', () => {
   assert.deepEqual(errorsOf(m), []);
 });
 
-test('puerta con clave: Mealy, el pulso de apertura no es un valor fijo de estado', () => {
-  const m = FSM.keypadLockMachine();
+test('Mealy detector: y is a transition output, not a state output', () => {
+  const m = FSM.mealySequenceMachine();
   m.states.forEach((s) => assert.equal(Object.keys(s.outputs).length, 0, 'sin salidas Moore: es puramente Mealy'));
   const withOutput = m.transitions.filter((t) => Object.keys(t.outputs).length > 0);
   assert.equal(withOutput.length, 1);
-  assert.equal(withOutput[0].outputs.abierto, '1');
+  assert.equal(withOutput[0].outputs.y, '1');
   assert.deepEqual(errorsOf(m), []);
 });
 
@@ -272,8 +282,8 @@ test('.ice: estructura y bloque de codigo', () => {
  * ------------------------------------------------------------------------- */
 
 test('los ejemplos no dejan transiciones sin condicion', () => {
-  for (const build of [FSM.demoMachine, FSM.keypadLockMachine, FSM.trafficLightMachine]) {
-    const m = build();
+  for (const example of FSM.EXAMPLES) {
+    const m = FSM.exampleMachine(example.id);
     const vacias = m.transitions.filter((t) => String(t.cond).trim() === '');
     assert.equal(vacias.length, 0, m.name + ' tiene transiciones sin condicion');
   }
@@ -325,15 +335,15 @@ test('sin default en el proximo estado si los codigos estan todos cubiertos', ()
 
 test('con default si quedan codigos sin usar', () => {
   const v = VERILOG.generateModule(FSM.trafficLightMachine()); // 3 estados en 2 bits
-  assert.match(v, /default: next_state = ROJO;/);
+  assert.match(v, /default: next_state = RED;/);
 });
 
 test('el case de salidas cierra con una rama por defecto explicita y vacia', () => {
-  for (const build of [FSM.demoMachine, FSM.keypadLockMachine, FSM.trafficLightMachine]) {
-    const v = VERILOG.generateModule(build());
+  for (const example of FSM.EXAMPLES) {
+    const v = VERILOG.generateModule(FSM.exampleMachine(example.id));
     const salidas = v.slice(v.indexOf('// 3)'));
-    assert.match(salidas, /default: begin\s*\n\s*end\s*\n\s*endcase/, build.name);
-    assert.ok(!/default: ;/.test(v), build.name + ': la rama vacia se escribe con begin/end');
+    assert.match(salidas, /default: begin\s*\n\s*end\s*\n\s*endcase/, example.id);
+    assert.ok(!/default: ;/.test(v), example.id + ': la rama vacia se escribe con begin/end');
   }
 });
 
@@ -345,35 +355,29 @@ test('one-hot: siempre hace falta default (quedan codigos sin usar)', () => {
 });
 
 /* ---------------------------------------------------------------------------
- * Puerta con clave: Mealy, la salida va en la transicion.
+ * Mealy sequence detector: the output belongs to the matching transition.
  * ------------------------------------------------------------------------- */
 
-test('puerta con clave: abierto se asigna en la transicion, no en el estado', () => {
-  const m = FSM.keypadLockMachine();
+test('Mealy detector assigns y on the transition, not in a state', () => {
+  const m = FSM.mealySequenceMachine();
   const v = VERILOG.generateModule(m);
-  assert.match(v, /CLAVE_AB: begin\s*\n\s*if \(a && !b\) begin abierto = 1'b1; end/);
+  assert.match(v, /S10: begin\s*\n\s*if \(x\) begin y = 1'b1; end/);
   assert.equal(m.states.filter((s) => Object.keys(s.outputs || {}).length).length, 0,
-    'ningun estado tiene salidas: es Mealy puro');
+    'no state has outputs: this is a pure Mealy machine');
 });
 
-test('puerta con clave: dos entradas, pensado para los dos botones de la placa', () => {
-  const m = FSM.keypadLockMachine();
-  assert.deepEqual(plain(m.inputs.map((p) => p.name)).sort(), ['a', 'b']);
+test('Mealy detector uses one input and one output', () => {
+  const m = FSM.mealySequenceMachine();
+  assert.deepEqual(plain(m.inputs.map((p) => p.name)), ['x']);
   assert.equal(m.outputs.length, 1);
   assert.equal(m.states.length, 3);
 });
 
-test('puerta con clave: la salida vive en un autoenlace, para que dure mientras A siga pulsado', () => {
-  const m = FSM.keypadLockMachine();
+test('Mealy detector pulses when the transition completes 101', () => {
+  const m = FSM.mealySequenceMachine();
   const conSalida = m.transitions.filter((t) => Object.keys(t.outputs || {}).length > 0);
-  assert.equal(conSalida.length, 1, 'una sola transicion abre');
-  assert.equal(conSalida[0].from, conSalida[0].to, 'es un autoenlace: no se sale del estado');
-  assert.equal(conSalida[0].cond, 'a && !b');
-});
-
-test('puerta con clave: pulsar los dos botones cancela y vuelve al estado inicial', () => {
-  const m = FSM.keypadLockMachine();
-  const cancelan = m.transitions.filter((t) => t.cond === 'a && b');
-  assert.equal(cancelan.length, 2, 'una por cada estado avanzado');
-  cancelan.forEach((t) => assert.equal(t.to, m.initial));
+  assert.equal(conSalida.length, 1, 'exactly one transition asserts y');
+  assert.equal(conSalida[0].from, 's10');
+  assert.equal(conSalida[0].to, 's1', 'the final 1 starts the next overlapping match');
+  assert.equal(conSalida[0].cond, 'x');
 });

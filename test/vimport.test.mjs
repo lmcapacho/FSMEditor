@@ -126,9 +126,9 @@ test('unrecognized Verilog reports a clear error instead of a generic exception'
   assert.throws(() => VIMPORT.parseModule('module x(); endmodule'), VIMPORT.ParseError);
 });
 
-test('keypad lock with compound conditions performs an exact round trip', () => {
-  const { original, reexported, reimported } = roundTrip(FSM.keypadLockMachine());
+test('Mealy sequence detector performs an exact round trip', () => {
+  const { original, reexported, reimported } = roundTrip(FSM.mealySequenceMachine());
   assert.equal(reexported, original);
-  assert.deepEqual(plain(reimported.inputs.map((p) => p.name)), ['a', 'b']);
+  assert.deepEqual(plain(reimported.inputs.map((p) => p.name)), ['x']);
   assert.equal(reimported.states.length, 3);
 });

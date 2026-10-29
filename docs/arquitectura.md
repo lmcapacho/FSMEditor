@@ -6,7 +6,8 @@ single global object.
 
 | Module | Responsibility |
 |---|---|
-| `js/model.js` | Machine model, validation, serialization and examples. |
+| `js/model.js` | Machine model, validation, serialization and read-only example registry. |
+| `examples/*.js` | Read-only example definitions, loaded without `fetch` so they work from `file://`. |
 | `js/verilog.js` | Verilog-2001 generation. |
 | `js/icestudio.js` | `.ice` block generation. |
 | `js/vimport.js` | Import of the editor-generated Verilog format. |

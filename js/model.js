@@ -434,112 +434,43 @@
   }
 
   /* ----------------------------------------------------------------------- */
-  /* Default example: Moore "101" sequence detector.                         */
+  /* Read-only example registry. Example data lives in examples/*.js so it   */
+  /* remains available from file:// without a fetch request.                 */
   /* ----------------------------------------------------------------------- */
 
-  function demoMachine() {
-    var m = createMachine();
-    m.name = 'detector_101';
-    createPort(m, 'input', 'x');
-    var y = createPort(m, 'output', 'y');
-    y.def = '0';
+  var EXAMPLES = [];
 
-    var s0 = createState(m, 200, 280, 'S0');
-    var s1 = createState(m, 430, 170, 'S1');
-    var s10 = createState(m, 680, 280, 'S10');
-    var s101 = createState(m, 430, 430, 'S101');
-    m.initial = s0.id;
-    s101.outputs.y = '1';
-
-    /* Cada transicion lleva su condicion explicita: el diagrama de estados no
-       tiene "else", esa es una construccion de la sentencia Verilog. */
-    createTransition(m, s0.id, s1.id, 'x');
-    createTransition(m, s0.id, s0.id, '!x');
-    createTransition(m, s1.id, s10.id, '!x');
-    createTransition(m, s1.id, s1.id, 'x');
-    createTransition(m, s10.id, s101.id, 'x');
-    createTransition(m, s101.id, s1.id, 'x');
-    createTransition(m, s101.id, s0.id, '!x');
-    return m;
+  function freezeDeep(value) {
+    if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+      Object.keys(value).forEach(function (key) { freezeDeep(value[key]); });
+      Object.freeze(value);
+    }
+    return value;
   }
 
-  /* ----------------------------------------------------------------------- */
-  /* Example: traffic light (Moore, three-state cycle).                       */
-  /* ----------------------------------------------------------------------- */
-
-  function trafficLightMachine() {
-    var m = createMachine();
-    m.name = 'semaforo';
-    createPort(m, 'input', 'tick');
-    ['rojo', 'amarillo', 'verde'].forEach(function (name) {
-      var p = createPort(m, 'output', name);
-      p.def = '0';
-    });
-
-    var rojo = createState(m, 300, 180, 'ROJO');
-    var verde = createState(m, 560, 340, 'VERDE');
-    var amarillo = createState(m, 300, 500, 'AMARILLO');
-    m.initial = rojo.id;
-    rojo.outputs.rojo = '1';
-    verde.outputs.verde = '1';
-    amarillo.outputs.amarillo = '1';
-
-    createTransition(m, rojo.id, verde.id, 'tick');
-    createTransition(m, verde.id, amarillo.id, 'tick');
-    createTransition(m, amarillo.id, rojo.id, 'tick');
-    return m;
+  function registerExample(example) {
+    if (!example || !isIdentifier(example.id) || !example.machine) {
+      throw new Error('Invalid example definition.');
+    }
+    if (EXAMPLES.some(function (item) { return item.id === example.id; })) {
+      throw new Error('Duplicate example ID: ' + example.id);
+    }
+    EXAMPLES.push(freezeDeep({
+      id: example.id,
+      label: String(example.label || example.id),
+      machine: JSON.parse(JSON.stringify(example.machine))
+    }));
   }
 
-  /* ----------------------------------------------------------------------- */
-  /* Example: two-button keypad lock (Mealy).                                 */
-  /*                                                                          */
-  /* La clave es la secuencia A, B, A sobre dos pulsadores. Pensado para      */
-  /* comprobarse en una Alhambra II, que trae exactamente dos botones (SW1,   */
-  /* SW2) y ocho LED: a -> SW1, b -> SW2, abierto -> LED0.                    */
-  /*                                                                          */
-  /* La salida es Mealy de verdad: "abierto" depende del estado CLAVE_AB Y    */
-  /* de que A siga pulsado, asi que el LED permanece encendido mientras se    */
-  /* mantiene el boton. Esto es lo que la hace observable en la placa: un     */
-  /* pulso de un ciclo a 12 MHz duraria 83 ns y no se veria.                  */
-  /*                                                                          */
-  /* Pulsar los dos botones a la vez cancela el intento y vuelve a REPOSO.    */
-  /* Donde no hay transicion dibujada la maquina se queda donde esta, que es  */
-  /* lo que permite soltar los botones entre digito y digito.                 */
-  /* ----------------------------------------------------------------------- */
-
-  function keypadLockMachine() {
-    var m = createMachine();
-    m.name = 'puerta_clave';
-    createPort(m, 'input', 'a');
-    createPort(m, 'input', 'b');
-    var abierto = createPort(m, 'output', 'abierto');
-    abierto.def = '0';
-
-    var reposo = createState(m, 200, 300, 'REPOSO');
-    var claveA = createState(m, 430, 300, 'CLAVE_A');
-    var claveAB = createState(m, 660, 300, 'CLAVE_AB');
-    m.initial = reposo.id;
-
-    createTransition(m, reposo.id, claveA.id, 'a && !b');
-    createTransition(m, claveA.id, claveAB.id, 'b && !a');
-    createTransition(m, claveA.id, reposo.id, 'a && b');
-    /* clave completa: autoenlace que lleva la salida Mealy */
-    var ok = createTransition(m, claveAB.id, claveAB.id, 'a && !b');
-    ok.outputs.abierto = '1';
-    /* el bucle se fija hacia arriba: dejado a la fisica sale hacia la derecha,
-       fuera del encuadre inicial, porque el ajuste de vista solo mira los
-       circulos de los estados y no la geometria de las curvas. */
-    ok.auto = false;
-    ok.loopAngle = -90;
-    createTransition(m, claveAB.id, reposo.id, 'a && b');
-    return m;
+  function exampleMachine(id) {
+    var example = EXAMPLES.find(function (item) { return item.id === id; });
+    if (!example) throw new Error('Unknown example: ' + id);
+    return deserialize(JSON.stringify(example.machine));
   }
 
-  var EXAMPLES = [
-    { id: 'detector101', label: 'Detector de secuencia (101)', build: demoMachine },
-    { id: 'semaforo', label: 'Traffic light', build: trafficLightMachine },
-    { id: 'puertaClave', label: 'Puerta con clave (Mealy)', build: keypadLockMachine }
-  ];
+  function defaultMachine() { return exampleMachine('detector101'); }
+  function trafficLightMachine() { return exampleMachine('trafficLight'); }
+  function mealySequenceMachine() { return exampleMachine('detector101Mealy'); }
 
   global.FSM = {
     uid: uid,
@@ -565,9 +496,12 @@
     validate: validate,
     serialize: serialize,
     deserialize: deserialize,
-    demoMachine: demoMachine,
+    registerExample: registerExample,
+    exampleMachine: exampleMachine,
+    demoMachine: defaultMachine,
+    defaultMachine: defaultMachine,
     trafficLightMachine: trafficLightMachine,
-    keypadLockMachine: keypadLockMachine,
+    mealySequenceMachine: mealySequenceMachine,
     EXAMPLES: EXAMPLES
   };
 }(window));

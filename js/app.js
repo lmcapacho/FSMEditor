@@ -756,7 +756,7 @@
       panel.appendChild(h('button', {
         role: 'menuitem',
         text: I18N.t('example.' + ex.id) || ex.label,
-        onclick: function () { loadMachine(ex.build(), true); }
+        onclick: function () { loadMachine(FSM.exampleMachine(ex.id), true); }
       }));
     });
   }
@@ -838,7 +838,7 @@
       if (saved) restored = FSM.deserialize(saved);
     } catch (e) { restored = null; }
 
-    loadMachine(restored && restored.states.length ? restored : FSM.demoMachine(), true);
+    loadMachine(restored && restored.states.length ? restored : FSM.exampleMachine('detector101'), true);
     EDITOR.setMode('select');
   }
 

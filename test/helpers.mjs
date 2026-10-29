@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const JS_DIR = path.join(here, '..', 'js');
+const EXAMPLES_DIR = path.join(here, '..', 'examples');
 
 export function loadBrowserModules(files = ['model.js', 'verilog.js', 'icestudio.js']) {
   const sandbox = { console, TextEncoder, TextDecoder };
@@ -21,6 +22,12 @@ export function loadBrowserModules(files = ['model.js', 'verilog.js', 'icestudio
   for (const f of files) {
     const code = fs.readFileSync(path.join(JS_DIR, f), 'utf8');
     vm.runInContext(code, sandbox, { filename: f });
+  }
+  if (files.includes('model.js')) {
+    for (const f of ['detector-101-moore.js', 'traffic-light-moore.js', 'detector-101-mealy.js']) {
+      const code = fs.readFileSync(path.join(EXAMPLES_DIR, f), 'utf8');
+      vm.runInContext(code, sandbox, { filename: f });
+    }
   }
   return sandbox;
 }

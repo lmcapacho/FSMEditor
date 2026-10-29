@@ -31,6 +31,9 @@ Then open `http://localhost:8000`.
   Icestudio `.ice` file.
 - Spanish and English user interface, with included examples.
 
+Examples are stored separately in `examples/` and are loaded as new editable
+machines. Editing or saving one never changes its original example file.
+
 ## Main controls
 
 | Action | Control |
