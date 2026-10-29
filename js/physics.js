@@ -16,10 +16,10 @@
   var C = {
     MASS: 50, FRICTION: 0.8, DT: 10, MAX_FORCE: 100000,
     REACH_STATE: 2000, REACH_TRANS: 1500,
-    REST: 22,            // curvatura natural (px) de una linea sin otras fuerzas
-    MAX_STEP: 8,         // desplazamiento maximo por paso (estabilidad)
+    REST: 22,            // natural curvature (px) of a line without other forces
+    MAX_STEP: 8,         // maximum displacement per step (stability)
     LINE: 2,
-    HOLD_RATE: 0.02      // fraccion por paso con la que se llega al valor fijado por untangle
+    HOLD_RATE: 0.02      // fraction per step used to reach the value set by untangle
   };
 
   function hash(id) {
@@ -28,8 +28,8 @@
     return h;
   }
 
-  /* Marco de referencia de un par de estados: direccion u, normal n, punto
-     medio de los bordes (m) y punto medio de los centros (c). */
+  /* Reference frame for a state pair: direction u, normal n, edge midpoint
+     (m), and center midpoint (c). */
   function frameOf(A, B) {
     var dx = B.x - A.x, dy = B.y - A.y, d = Math.sqrt(dx * dx + dy * dy);
     if (d < 1e-6) return null;
@@ -38,14 +38,14 @@
     return { ux: ux, uy: uy, nx: -uy, ny: ux, mx: (sx + ex) / 2, my: (sy + ey) / 2, cx: (A.x + B.x) / 2, cy: (A.y + B.y) / 2 };
   }
 
-  /* Posicion del punto guia para un desplazamiento `l`. */
+  /* Guide-point position for offset `l`. */
   function handlePos(A, B, l) {
     var f = frameOf(A, B);
     if (!f) return { x: A.x, y: A.y };
     return { x: f.mx + f.nx * l, y: f.my + f.ny * l };
   }
 
-  /* Desplazamiento perpendicular que corresponde a un punto cualquiera. */
+  /* Perpendicular offset corresponding to any point. */
   function curveFromPoint(A, B, p) {
     var f = frameOf(A, B);
     if (!f) return 0;
@@ -63,7 +63,7 @@
     var uy = (a2 * (cx - bx) + b2 * (ax - cx) + c2 * (bx - ax)) / d;
     return { x: ux, y: uy, r: Math.hypot(ax - ux, ay - uy) };
   }
-  /* Menor diferencia angular de a a b, en (-PI, PI]. */
+  /* Smallest angular difference from a to b, in (-PI, PI]. */
   function angleDelta(a, b) {
     var d = b - a;
     while (d <= -Math.PI) d += 2 * Math.PI;
@@ -140,7 +140,7 @@
   }
 
   /* ------------------------------- loops -------------------------------- */
-  var LOOP_STEP = 58;    // grados entre bucles de un mismo estado
+  var LOOP_STEP = 58;    // degrees between loops on the same state
 
   /* Angulo (grados, y hacia abajo) de cada auto-transicion: automatico = el
      opuesto a donde estan los vecinos del estado (y del triangulo inicial,
@@ -246,7 +246,7 @@
     var d1 = ccw(p3, p4, p1), d2 = ccw(p3, p4, p2), d3 = ccw(p1, p2, p3), d4 = ccw(p1, p2, p4);
     return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
   }
-  var TOUCH = 3;      // dos lineas a menos de esto (px) cuentan como conflicto, aunque no se corten
+  var TOUCH = 3;      // two lines closer than this (px) conflict even if they do not intersect
   function bbox(p) {
     var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (var i = 0; i < p.length; i += 1) {
@@ -275,7 +275,7 @@
     return false;
   }
 
-  var CLEAR = 6, LABEL_CLEAR = 18;    // holgura minima curva-estado y etiqueta-estado (px)
+  var CLEAR = 6, LABEL_CLEAR = 18;    // minimum curve-state and label-state clearance (px)
 
   /* Cuantos "problemas" tiene un conjunto de curvaturas: cruces entre arcos,
      arcos que atraviesan un estado y arcos casi rectos. `only` limita el
@@ -424,8 +424,8 @@
     return { values: out, changed: changed, problems: best, before: start };
   }
 
-  /* Deja asentar la fisica, deshace cruces y deja que las curvas lleguen a los
-     valores decididos (util para pruebas y para cargar una maquina). */
+  /* Lets physics settle, removes crossings, and lets curves reach their target
+     values (useful for tests and loading a machine). */
   function settle(input, phys, maxRounds) {
     var res, work = input.trans.map(function (t) { return { id: t.id, from: t.from, to: t.to, curve: t.curve, auto: t.auto, loopAngle: t.loopAngle }; });
     var hold = null, rounds = 0, problems = 0;

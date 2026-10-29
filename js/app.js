@@ -245,10 +245,10 @@
   }
 
   /* ---- state transition table (live summary) ---- */
-  /* The State column contains only the name. Moore outputs belong to the
-     estado, pero son salidas: van en la columna "Salidas" (misma celda para
-     todas las filas del estado). Las salidas Mealy pertenecen a la transicion
-     y se muestran junto al estado siguiente. */
+    /* The State column contains only the name. Moore outputs belong to the
+     state, but are shown in the Outputs column (the same cell for every row
+     of that state). Mealy outputs belong to the transition and are displayed
+     next to the destination state. */
   function stateCell(s, rowspan) {
     var td = h('td', { class: 'state-cell', rowspan: rowspan || 1 });
     var isInit = M().initial === s.id;
@@ -516,7 +516,7 @@
       else if (view === 'body') code = VERILOG.generateBody(M());
       else code = ICE.iceText(M());
     } catch (e) {
-      code = '// Error generando la salida:\n// ' + (e && e.message ? e.message : e);
+      code = '// Error generating output:\n// ' + (e && e.message ? e.message : e);
     }
     $('code-out').textContent = code;
   }

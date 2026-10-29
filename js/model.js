@@ -6,7 +6,7 @@
 (function (global) {
   'use strict';
 
-  var DEFAULT_CURVE = 20;   // comba inicial de una transicion (px, perpendicular); la fisica la asienta
+  var DEFAULT_CURVE = 20;   // initial transition bend (perpendicular px); physics settles it
 
   /* Bits required to encode `count` states with the requested encoding. */
   function stateBits(count, encoding) {
@@ -22,7 +22,7 @@
     return prefix + '_' + uidCounter.toString(36) + Date.now().toString(36).slice(-4);
   }
 
-  /* --- Palabras reservadas de Verilog-2001 ------------------------------- */
+  /* --- Verilog-2001 reserved words -------------------------------------- */
   var KEYWORDS = ('always and assign automatic begin buf bufif0 bufif1 case casex casez cell cmos ' +
     'config deassign default defparam design disable edge else end endcase endconfig endfunction ' +
     'endgenerate endmodule endprimitive endspecify endtable endtask event for force forever fork ' +
@@ -45,7 +45,7 @@
 
   function sanitizeIdentifier(name, fallback) {
     var s = String(name == null ? '' : name)
-      .normalize('NFD').replace(/[̀-ͯ]/g, '')   // quita acentos
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')   // remove accents
       .replace(/[^A-Za-z0-9_]/g, '_')
       .replace(/^_+(?=[0-9])/, 'n_');
     if (!/^[A-Za-z_]/.test(s)) s = 'n_' + s;
@@ -70,7 +70,7 @@
       outputs: [],               // {id, name, width, def}
       states: [],                // {id, name, x, y, outputs:{}, comment}
       transitions: [],           // {id, from, to, cond, outputs:{}, curve, loopAngle, comment}
-      initial: null              // id del estado inicial / de reset
+      initial: null              // initial/reset state ID
     };
   }
 
@@ -90,9 +90,9 @@
       x: Math.round(x),
       y: Math.round(y),
       outputs: {},
-      code: null,            // codigo de estado forzado (int) o null = automatico
-      radius: null,          // radio del circulo (px) o null = automatico
-      dcUndefined: false,    // salidas no asignadas en este estado -> 'x' (don't care)
+      code: null,            // forced state code (int), or null = automatic
+      radius: null,          // circle radius (px), or null = automatic
+      dcUndefined: false,    // unassigned outputs in this state -> 'x' (don't care)
       comment: ''
     };
     machine.states.push(st);
@@ -107,17 +107,16 @@
       to: toId,
       cond: cond == null ? '' : cond,
       outputs: {},
-      curve: 0,             // desplazamiento perpendicular del punto guia de la curva (px)
-      auto: true,           // true = la fisica coloca la curva (o el bucle); false = la fijo el usuario
+      curve: 0,             // perpendicular offset of the curve guide point (px)
+      auto: true,           // true = physics positions the curve (or loop); false = set by the user
       loopAngle: -90,
-      dcUndefined: false,   // salidas Mealy no asignadas en esta transicion -> 'x'
+      dcUndefined: false,   // unassigned Mealy outputs on this transition -> 'x'
       comment: ''
     };
     if (fromId !== toId) {
-      // Curva inicial; luego la fisica (physics.js) la asienta. La normal de la
-      // curva depende del sentido (A->B usa la contraria que B->A), asi que una
-      // transicion y su reciproca con el MISMO signo ya nacen a lados opuestos.
-      // Varias en el mismo sentido se abren en abanico alternando lado.
+      // Initial curve; physics.js settles it afterward. The curve normal depends
+      // on direction (A->B is opposite to B->A), so equal-sign reciprocal
+      // transitions start on opposite sides. Parallel transitions alternate sides.
       var same = machine.transitions.filter(function (o) { return o.from === fromId && o.to === toId; }).length;
       var mag = DEFAULT_CURVE + Math.floor(same / 2) * 25;
       t.curve = (same % 2 === 0) ? mag : -mag;
@@ -158,7 +157,7 @@
     return null;
   }
 
-  /* Transiciones que salen de un estado, en orden de prioridad (indice en el array). */
+  /* Transitions leaving a state, in priority order (array index). */
   function outgoing(machine, stateId) {
     return machine.transitions.filter(function (t) { return t.from === stateId; });
   }
@@ -187,7 +186,7 @@
     }
   }
 
-  /* Renombrar una salida conserva las asignaciones ya hechas. */
+  /* Renaming an output preserves existing assignments. */
   function renameOutput(machine, port, newName) {
     var old = port.name;
     if (old === newName) return;
@@ -202,7 +201,7 @@
     machine.transitions.forEach(function (t) { move(t.outputs); });
   }
 
-  /* Cambia la prioridad de una transicion dentro de su estado origen. */
+  /* Changes a transition's priority within its source state. */
   function moveTransitionPriority(machine, id, delta) {
     var t = getTransition(machine, id);
     if (!t) return;
@@ -241,8 +240,8 @@
     return depth === 0;
   }
 
-  /* Texto libre de asignaciones de salida -> mapa {nombre: valor}.
-     Acepta  "y=1, z=0"  |  "y1=2 done"  |  "run"(=1). Separadores: coma o espacio. */
+  /* Free-form output assignments -> {name: value} map.
+     Accepts "y=1, z=0" | "y1=2 done" | "run"(=1). Separators: comma or space. */
   function parseOutputs(text) {
     var map = {};
     String(text == null ? '' : text).split(/[,\s]+/).forEach(function (tok) {
@@ -257,7 +256,7 @@
     return map;
   }
 
-  /* Mapa {nombre: valor} -> "nombre=valor, nombre=valor" (canonico, editable). */
+  /* {name: value} map -> "name=value, name=value" (canonical, editable). */
   function formatOutputs(map) {
     return Object.keys(map || {}).map(function (k) { return k + '=' + map[k]; }).join(', ');
   }
@@ -271,16 +270,16 @@
     function err(msg, ref) { problems.push({ level: 'error', msg: msg, ref: ref || null }); }
     function warn(msg, ref) { problems.push({ level: 'warn', msg: msg, ref: ref || null }); }
 
-    if (!isIdentifier(machine.name)) err('El nombre del modulo "' + machine.name + '" no es un identificador Verilog valido.');
-    if (!isIdentifier(machine.clock)) err('El nombre del reloj "' + machine.clock + '" no es valido.');
-    if (!isIdentifier(machine.reset)) err('El nombre del reset "' + machine.reset + '" no es valido.');
+    if (!isIdentifier(machine.name)) err('Module name "' + machine.name + '" is not a valid Verilog identifier.');
+    if (!isIdentifier(machine.clock)) err('Clock name "' + machine.clock + '" is not valid.');
+    if (!isIdentifier(machine.reset)) err('Reset name "' + machine.reset + '" is not valid.');
 
     if (machine.states.length === 0) {
-      warn('La maquina no tiene estados.');
+      warn('The machine has no states.');
       return problems;
     }
     if (!machine.initial || !getState(machine, machine.initial)) {
-      err('No hay estado inicial definido (marca uno como "Estado inicial").');
+      err('No initial state is defined (mark one as the initial state).');
     }
 
     var seen = {};
@@ -289,8 +288,8 @@
       ? machine.states.length - 1
       : Math.pow(2, stateBits(machine.states.length, machine.encoding)) - 1;
     machine.states.forEach(function (s) {
-      if (!isIdentifier(s.name)) err('El estado "' + s.name + '" no es un identificador valido.', { kind: 'state', id: s.id });
-      if (seen[s.name]) err('Nombre de estado duplicado: "' + s.name + '".', { kind: 'state', id: s.id });
+      if (!isIdentifier(s.name)) err('State "' + s.name + '" is not a valid identifier.', { kind: 'state', id: s.id });
+      if (seen[s.name]) err('Duplicate state name: "' + s.name + '".', { kind: 'state', id: s.id });
       seen[s.name] = true;
       if (s.code != null) {
         if (s.code < 0 || (machine.encoding !== 'onehot' && s.code > maxCode)) {
@@ -304,12 +303,12 @@
     });
 
     var ports = {};
-    ports[machine.clock] = 'reloj';
+    ports[machine.clock] = 'clock';
     ports[machine.reset] = 'reset';
     machine.inputs.concat(machine.outputs).forEach(function (p) {
-      if (!isIdentifier(p.name)) err('El puerto "' + p.name + '" no es un identificador valido.');
-      else if (ports[p.name]) err('Nombre de puerto duplicado: "' + p.name + '".');
-      ports[p.name] = 'puerto';
+      if (!isIdentifier(p.name)) err('Port "' + p.name + '" is not a valid identifier.');
+      else if (ports[p.name]) err('Duplicate port name: "' + p.name + '".');
+      ports[p.name] = 'port';
       if (!(p.width >= 1)) err('El ancho de "' + p.name + '" debe ser >= 1.');
     });
     if (ports.state) warn('Hay un puerto llamado "state"; colisiona con el registro de estado (se renombrara).');

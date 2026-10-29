@@ -1,9 +1,9 @@
-/* Carga los modulos de navegador (scripts clasicos con IIFE sobre `window`)
-   dentro de un contexto vm y devuelve ese objeto global.
+/* Loads browser modules (classic IIFE scripts over `window`) into a vm context
+   and returns that global object.
 
    Los scripts hacen `(function (global) { ... }(window))` y dentro usan
-   referencias desnudas (`FSM`, `VERILOG`). En un navegador `window` ES el
-   objeto global, asi que aqui hacemos que `window` apunte al propio sandbox. */
+   bare references (`FSM`, `VERILOG`). In a browser `window` IS the global
+   object, so here `window` points to the sandbox itself. */
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
@@ -32,8 +32,7 @@ export function loadBrowserModules(files = ['model.js', 'verilog.js', 'icestudio
   return sandbox;
 }
 
-/* Copia profunda a traves de la frontera del vm: iguala prototipos para que
-   assert.deepStrictEqual funcione. */
+/* Deep copy across the vm boundary: normalizes prototypes for deep equality. */
 export function plain(x) {
   return JSON.parse(JSON.stringify(x));
 }

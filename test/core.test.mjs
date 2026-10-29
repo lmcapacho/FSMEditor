@@ -45,7 +45,7 @@ test('demo -> Verilog modulo completo', () => {
   assert.match(v, /y = 1'b0;/);
   assert.match(v, /S101: begin\s*\n\s*y = 1'b1;/);
 
-  // balance basico de begin/end
+  // basic begin/end balance
   const begins = (v.match(/\bbegin\b/g) || []).length;
   const ends = (v.match(/\bend\b/g) || []).length;
   assert.equal(begins, ends, 'begin/end desbalanceados');
@@ -88,7 +88,7 @@ test('Mealy + bus + gray + reset sincrono activo bajo', () => {
   assert.deepEqual(errorsOf(m), []);
 
   const v = VERILOG.generateModule(m);
-  assert.match(v, /always @\(posedge clk\) begin/);            // reset sincrono: sin lista or
+  assert.match(v, /always @\(posedge clk\) begin/);            // synchronous reset: no or list
   assert.doesNotMatch(v, /negedge rst/);
   assert.match(v, /if \(!rst\)/);                              // activo en bajo
   assert.match(v, /output reg\s+\[7:0\] q/);
@@ -98,7 +98,7 @@ test('Mealy + bus + gray + reset sincrono activo bajo', () => {
   assert.match(v, /B\s+= 2'b01/);
   assert.match(v, /C\s+= 2'b11/);                              // gray(2) = 3 -> 2'b11
   assert.match(v, /busy = 1'b1;/);
-  assert.match(v, /q = 8'hAA;/);                               // salida Mealy en A cuando en
+  assert.match(v, /q = 8'hAA;/);                               // Mealy output in A when enabled
   assert.match(v, /if \(en\) begin q = 8'hAA; end/);
 });
 
@@ -143,7 +143,7 @@ test('toda transicion nace curva (nunca recta)', () => {
   const t3 = FSM.createTransition(m, A.id, B.id, '');     // otra A->B
   assert.ok(t1.curve * t3.curve < 0, 'las paralelas del mismo sentido alternan lado');
   const loop = FSM.createTransition(m, A.id, A.id, '');
-  assert.equal(loop.curve, 0);                            // los bucles usan angulo, no comba
+  assert.equal(loop.curve, 0);                            // loops use an angle, not curvature
 });
 
 test('migracion: aristas antiguas rectas (curve 0) pasan a arco', () => {
@@ -268,17 +268,17 @@ test('.ice: estructura y bloque de codigo', () => {
   const clk = blocks.find((b) => b.type === 'basic.input' && b.data.name === 'clk');
   assert.equal(clk.data.clock, true, 'clk debe ir marcado como reloj');
 
-  // hay un wire por cada puerto del bloque de codigo
+  // there is one wire for every code-block port
   assert.equal(ice.design.graph.wires.length, 3 /*in*/ + 1 /*out*/);
-  // JSON valido y sin `undefined` textual
+  // valid JSON without textual `undefined`
   const txt = ICE.iceText(m);
   JSON.parse(txt);
   assert.doesNotMatch(txt, /: *undefined/);
 });
 
 /* ---------------------------------------------------------------------------
- * El diagrama no tiene "else": cada transicion lleva condicion explicita y el
- * generador emite el complemento en vez de una rama `else` pelada.
+ * The diagram has no "else": every transition has an explicit condition and
+ * the generator emits the complement instead of a bare `else` branch.
  * ------------------------------------------------------------------------- */
 
 test('los ejemplos no dejan transiciones sin condicion', () => {
@@ -303,7 +303,7 @@ test('transicion sin condicion: se emite el complemento de las anteriores', () =
   const b = FSM.createState(m, 100, 0, 'B');
   m.initial = a.id;
   FSM.createTransition(m, a.id, b.id, 'x');
-  FSM.createTransition(m, a.id, a.id, '');          // "lo que queda"
+  FSM.createTransition(m, a.id, a.id, '');          // "what remains"
   const v = VERILOG.generateModule(m);
   assert.match(v, /if \(x\) next_state = B;\s*\n\s*else if \(!x\) next_state = A;/);
   assert.ok(!/else next_state/.test(v));
@@ -324,7 +324,7 @@ test('complemento de varias condiciones y de una compuesta', () => {
 });
 
 /* ---------------------------------------------------------------------------
- * El `default` solo aparece cuando de verdad hace falta.
+ * `default` appears only when it is actually needed.
  * ------------------------------------------------------------------------- */
 
 test('sin default en el proximo estado si los codigos estan todos cubiertos', () => {

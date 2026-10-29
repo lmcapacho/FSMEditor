@@ -28,7 +28,7 @@ body {
   overflow: hidden;
 }
 
-/* ---------- barra de herramientas ---------- */
+/* ---------- toolbar ---------- */
 .toolbar {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
   padding: 8px 10px;
@@ -61,7 +61,7 @@ button.icon-btn {
 }
 select.lang-select { width: auto; padding: 5px 6px; font-size: 12px; }
 
-/* ---------- menus desplegables (Archivo, con Exportar y Cargar ejemplo dentro) ---------- */
+/* ---------- dropdown menus (File, with nested Export and Load example menus) ---------- */
 .menu { position: relative; }
 .menu-trigger { font-weight: 600; }
 .menu-panel {
@@ -79,11 +79,11 @@ select.lang-select { width: auto; padding: 5px 6px; font-size: 12px; }
 .menu-panel button:hover { background: var(--accent-2); border-color: var(--accent-2); color: #fff; }
 .menu-sep { height: 1px; background: var(--line); margin: 5px 4px; }
 
-/* submenu anidado ("Cargar ejemplo" dentro de Archivo): se abre hacia la derecha */
+/* Nested submenu ("Load example" within File): opens to the right. */
 .menu.submenu { width: 100%; }
 .menu.submenu .menu-panel { top: -4px; left: calc(100% + 4px); }
 
-/* ---------- distribucion principal ---------- */
+/* ---------- main layout ---------- */
 main { flex: 1; display: flex; min-height: 0; }
 
 #work-area { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
@@ -99,7 +99,7 @@ main { flex: 1; display: flex; min-height: 0; }
   pointer-events: none;
 }
 
-/* ---------- widget flotante de navegacion (zoom / recentrar) ---------- */
+/* ---------- floating navigation widget (zoom / recenter) ---------- */
 #nav-widget {
   position: absolute; right: 12px; bottom: 10px;
   display: flex; gap: 2px;
@@ -134,9 +134,9 @@ main { flex: 1; display: flex; min-height: 0; }
 .tab-panel { display: none; overflow: auto; padding: 12px; flex: 1; }
 .tab-panel.active { display: block; }
 
-/* "Salida" se divide en dos zonas fijas: el codigo arriba (con su propio
-   scroll) y la tabla de transicion siempre visible abajo, sin tener que
-   desplazar el panel entero para llegar a ella. */
+/* The Output tab has two fixed areas: code at the top (with its own scroll)
+   and the transition table always visible below, without scrolling the whole
+   panel to reach it. */
 #panel-code.active { display: flex; flex-direction: column; overflow: hidden; }
 #panel-code .code-head { flex-shrink: 0; }
 #panel-code #code-out { flex: 1; min-height: 80px; overflow: auto; }
@@ -163,13 +163,13 @@ label.check input { width: auto; }
 .muted { color: var(--muted); }
 p.muted { margin: 4px 0; }
 
-/* puertos */
+/* ports */
 .port-row { display: flex; align-items: center; gap: 3px; margin-bottom: 5px; }
 .port-row .port-name { flex: 1; }
 .port-row .port-width { width: 48px; text-align: center; }
 .port-row .port-def { width: 60px; }
 
-/* editores de salida */
+/* output editors */
 .io-list { display: flex; flex-direction: column; gap: 5px; }
 .io-field { display: flex; align-items: center; gap: 8px; }
 .io-field > span { width: 90px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
@@ -179,7 +179,7 @@ p.muted { margin: 4px 0; }
 .badge.warn { color: var(--warn); border-color: var(--warn); }
 .badge.bad { color: var(--bad); border-color: var(--bad); }
 
-/* ---------- consola de problemas (estilo consola de compilacion, abajo) ---------- */
+/* ---------- problem console (compiler-console style, bottom) ---------- */
 #console-bar {
   flex-shrink: 0;
   display: flex; flex-direction: column;
@@ -206,7 +206,7 @@ p.muted { margin: 4px 0; }
 .console-list li.warn { border-left-color: var(--warn); }
 .console-list li.ok { border-left-color: var(--ok); cursor: default; }
 
-/* ---------- tabla de transicion de estados ---------- */
+/* ---------- state transition table ---------- */
 .trans-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
 .trans-table th {
   text-align: left; color: var(--muted); font-weight: 600;
@@ -221,7 +221,7 @@ p.muted { margin: 4px 0; }
 .trans-table td.out-cell { vertical-align: middle; }
 .trans-table .next-mealy { color: var(--warn); }
 
-/* codigo */
+/* code */
 .code-head { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
 .code-head select { flex: 1; }
 #code-out {
@@ -266,7 +266,7 @@ p.muted { margin: 4px 0; }
   #inspector { width: 280px; }
 }
 
-/* ---------- dialogo modal ---------- */
+/* ---------- modal dialog ---------- */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 100;
   background: rgba(6, 9, 14, .55);

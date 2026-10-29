@@ -22,8 +22,8 @@
     view: { tx: 60, ty: 40, k: 1 },
     mode: 'select',                 // select | addState | addTransition
     selection: null,                // {kind:'state'|'transition', id}
-    drag: null,                     // estado interno del arrastre en curso
-    phys: { v: {} },                // velocidades de la fisica de las curvas
+    drag: null,                     // internal state of the active drag
+    phys: { v: {} },                // curve-physics velocities
     hold: null,                     // valores fijados por untangle (o null)
     sig: '', untangled: false, physFrame: 0, physFrames: 0, loopAng: null
   };
@@ -103,7 +103,7 @@
     state.onChange = opts.onChange || state.onChange;
     state.onSelect = opts.onSelect || state.onSelect;
     state.onModeChange = opts.onModeChange || state.onModeChange;
-    state.onEdit = opts.onEdit || function () {};   // doble clic -> abrir dialogo
+    state.onEdit = opts.onEdit || function () {};   // double-click -> open dialog
 
     state.svg.innerHTML = '';
     var defs = el('defs');
@@ -300,14 +300,13 @@
     }
 
     var arc = PHYS.arc({ x: A.x, y: A.y, r: rA }, { x: B.x, y: B.y, r: rB }, t.curve || 0);
-    if (!arc) return null;                                   // dos estados en el mismo punto
-    var cut = PHYS.arcTrimmed(arc, ARROW - 1);          // misma curva, terminada antes de la punta
+    if (!arc) return null;                                   // two states at the same point
+    var cut = PHYS.arcTrimmed(arc, ARROW - 1);          // same curve, ending before the arrowhead
     var d = cut.circle
       ? 'M ' + arc.start.x + ' ' + arc.start.y + ' A ' + cut.circle.r + ' ' + cut.circle.r +
         ' 0 ' + cut.largeArc + ' ' + cut.sweep + ' ' + cut.end.x + ' ' + cut.end.y
       : 'M ' + arc.start.x + ' ' + arc.start.y + ' L ' + cut.end.x + ' ' + cut.end.y;
-    // si la curva queda por debajo (o por encima) de sus dos
-    // estados, la etiqueta se aparta un poco hacia fuera
+    // If the curve lies below (or above) both states, move the label outward.
     var shift = (A.y < arc.pos.y && B.y < arc.pos.y) ? 8 : ((A.y > arc.pos.y && B.y > arc.pos.y) ? -8 : 0);
     return {
       loop: false, A: A, B: B,
@@ -315,7 +314,7 @@
       tip: arc.end,
       tipAngle: Math.atan2(cut.tangent.y, cut.tangent.x),
       labelPos: { x: arc.pos.x, y: arc.pos.y + shift },
-      handle: arc.pos    // punto guia: aqui va el tirador azul cuando esta seleccionada
+      handle: arc.pos    // guide point: the blue handle appears here when selected
     };
   }
 
@@ -345,7 +344,7 @@
     if (selected && G.handle) {
       g.appendChild(el('circle', {
         class: 'curve-handle', r: 6, cx: G.handle.x, cy: G.handle.y,
-        title: G.loop ? 'arrastra para girar el bucle' : 'arrastra para curvar a mano'
+        title: G.loop ? 'drag to rotate the loop' : 'drag to curve manually'
       }));
     }
 
@@ -362,7 +361,7 @@
       bg.setAttribute('y', bb.y - 2);
       bg.setAttribute('width', bb.width + 8);
       bg.setAttribute('height', bb.height + 4);
-    } catch (e) { /* getBBox puede fallar si el SVG no esta visible */ }
+    } catch (e) { /* getBBox may fail when the SVG is not visible */ }
   }
 
   /* --------------------------------------------------------------------- */
