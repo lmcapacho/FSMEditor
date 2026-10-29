@@ -51,7 +51,7 @@ function intrusions(states, trans, curves) {
   return n;
 }
 
-test('la curva es UNA cuadratica que pasa exactamente por el punto guia', () => {
+test('the curve is one quadratic passing exactly through its guide point', () => {
   const A = st('A', 0, 0), B = st('B', 300, 0, 40);
   for (const l of [-80, -20, 35, 120]) {
     const arc = PHYS.arc(A, B, l);
@@ -60,7 +60,7 @@ test('la curva es UNA cuadratica que pasa exactamente por el punto guia', () => 
   }
 });
 
-test('el punto guia solo se mueve por la mediatriz: curveFromPoint es la inversa de handlePos', () => {
+test('the guide point moves only on the perpendicular bisector: curveFromPoint inverts handlePos', () => {
   const A = st('A', 10, 20), B = st('B', 310, 140, 45);
   for (const l of [-90, 0, 33, 150]) {
     const p = PHYS.handlePos(A, B, l);
@@ -71,14 +71,14 @@ test('el punto guia solo se mueve por la mediatriz: curveFromPoint es la inversa
   assert.ok(Math.abs(PHYS.curveFromPoint(A, B, off) - 40) < 1e-6);
 });
 
-test('los extremos salen del borde de cada estado y nunca de dentro', () => {
+test('endpoints leave each state boundary and never its interior', () => {
   const A = st('A', 0, 0, 40), B = st('B', 260, 90, 50);
   const arc = PHYS.arc(A, B, 60);
   assert.ok(Math.hypot(arc.start.x - A.x, arc.start.y - A.y) >= A.r);
   assert.ok(Math.hypot(arc.end.x - B.x, arc.end.y - B.y) >= B.r);
 });
 
-test('una transicion y su reciproca se separan a lados opuestos del segmento', () => {
+test('a transition and its reciprocal separate to opposite sides of the segment', () => {
   const states = [st('A', 0, 0), st('B', 300, 0)];
   const trans = [tr('ab', 'A', 'B'), tr('ba', 'B', 'A')];
   const r = PHYS.settle({ states, trans }, {}, 80);
@@ -89,13 +89,13 @@ test('una transicion y su reciproca se separan a lados opuestos del segmento', (
   assert.equal(crossings(states, trans, r.curves), 0);
 });
 
-test('una linea solitaria nunca queda recta', () => {
+test('an isolated line never stays straight', () => {
   const states = [st('A', 0, 0), st('B', 300, 0)];
   const r = PHYS.settle({ states, trans: [tr('e', 'A', 'B')] }, {}, 80);
   assert.ok(Math.abs(r.curves.e) >= 10, 'curvatura: ' + r.curves.e);
 });
 
-test('las curvas se abren HACIA AFUERA, alejandose de otro estado cercano', () => {
+test('curves bend OUTWARD, away from a nearby state', () => {
   // un tercer estado justo encima del punto medio: la curva debe combarse hacia abajo
   const states = [st('A', 0, 200), st('B', 300, 200), st('C', 150, 90)];
   const trans = [tr('e', 'A', 'B', 20)];
@@ -109,14 +109,14 @@ test('las curvas se abren HACIA AFUERA, alejandose de otro estado cercano', () =
   assert.ok(PHYS.handlePos(by(states2).A, by(states2).B, r2.curves.e).y < 200);
 });
 
-test('una curva fijada a mano (auto=false) no la mueve la fisica', () => {
+test('a manually pinned curve (auto=false) is not moved by physics', () => {
   const states = [st('A', 0, 0), st('B', 300, 0), st('C', 150, 30)];
   const res = PHYS.step({ states, trans: [tr('e', 'A', 'B', 55, false), tr('f', 'B', 'A', 20, true)] }, {}, 200);
   assert.equal(res.curves.e, undefined, 'la fijada no aparece entre las que se mueven');
   assert.notEqual(res.curves.f, undefined);
 });
 
-test('el ejemplo (detector 101) se asienta rapido, sin atravesar estados y sin lineas rectas', () => {
+test('the 101-detector example settles quickly without crossing states or straight lines', () => {
   // Nota: el grafo del ejemplo (8 transiciones sobre 4 estados, con el par
   // reciproco S10<->S101) tiene un cruce GEOMETRICAMENTE inevitable con
   // curvas simples -- lo comprobe con 10 disposiciones distintas de los 4
@@ -133,12 +133,12 @@ test('el ejemplo (detector 101) se asienta rapido, sin atravesar estados y sin l
   assert.ok(ms < 1000, 'debe asentarse rapido para no trabar el arrastre: ' + ms.toFixed(0) + ' ms');
 });
 
-test('es determinista: misma entrada -> mismas curvas', () => {
+test('is deterministic: same input -> same curves', () => {
   const run = () => JSON.stringify(PHYS.settle({ states: DEMO_STATES, trans: demoTrans(), initial: 'S0' }, {}, 80).curves);
   assert.equal(run(), run());
 });
 
-test('bucles: el angulo automatico apunta lejos de los vecinos y del triangulo inicial', () => {
+test('loops: automatic angle points away from neighbors and the initial triangle', () => {
   const states = [st('A', 300, 300), st('B', 500, 300)];
   const trans = [tr('ab', 'A', 'B'), tr('la', 'A', 'A', 0)];
   const ang = PHYS.loopAngles({ states, trans, initial: 'B' }).la;      // el vecino esta a la derecha
@@ -148,7 +148,7 @@ test('bucles: el angulo automatico apunta lejos de los vecinos y del triangulo i
   assert.equal(manual, 90);
 });
 
-test('barrido de 80 disposiciones aleatorias: casi todas sin cruces y ninguna con lineas rectas', () => {
+test('80 random-layout sweep: nearly all without crossings and none with straight lines', () => {
   let seed = 4242;
   const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
   const R = { S0: 37.2, S1: 37.2, S10: 40.8, S101: 44.4 };

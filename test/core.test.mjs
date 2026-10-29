@@ -21,11 +21,11 @@ test('gray code sequence', () => {
   assert.deepEqual(seq, [0, 1, 3, 2, 6, 7, 5, 4]);
 });
 
-test('demo (detector 101): validacion limpia', () => {
+test('demo (101 detector): validates without errors', () => {
   assert.deepEqual(errorsOf(FSM.demoMachine()), []);
 });
 
-test('demo -> Verilog modulo completo', () => {
+test('demo -> full Verilog module', () => {
   const m = FSM.demoMachine();
   const v = VERILOG.generateModule(m);
 
@@ -51,7 +51,7 @@ test('demo -> Verilog modulo completo', () => {
   assert.equal(begins, ends, 'begin/end desbalanceados');
 });
 
-test('demo -> Verilog solo cuerpo (Icestudio basic.code)', () => {
+test('demo -> Verilog body only (Icestudio basic.code)', () => {
   const m = FSM.demoMachine();
   const b = VERILOG.generateBody(m);
   assert.doesNotMatch(b, /\bmodule\b/, 'el cuerpo no debe declarar module');
@@ -62,7 +62,7 @@ test('demo -> Verilog solo cuerpo (Icestudio basic.code)', () => {
   assert.match(b, /y_r = 1'b1;/);
 });
 
-test('Mealy + bus + gray + reset sincrono activo bajo', () => {
+test('Mealy + bus + Gray + synchronous active-low reset', () => {
   const m = FSM.createMachine();
   m.name = 'ctrl';
   m.encoding = 'gray';
@@ -102,7 +102,7 @@ test('Mealy + bus + gray + reset sincrono activo bajo', () => {
   assert.match(v, /if \(en\) begin q = 8'hAA; end/);
 });
 
-test('transicion incondicional fuera de sitio -> aviso', () => {
+test('unconditional transition out of order -> warning', () => {
   const m = FSM.createMachine();
   const A = FSM.createState(m, 0, 0, 'A');
   const B = FSM.createState(m, 1, 0, 'B');
@@ -113,7 +113,7 @@ test('transicion incondicional fuera de sitio -> aviso', () => {
   assert.ok(warningsOf(m).some((w) => /menor prioridad/.test(w)), 'esperaba aviso de prioridad');
 });
 
-test('serializar / deserializar es idempotente', () => {
+test('serialize / deserialize is idempotent', () => {
   const m = FSM.demoMachine();
   const round = FSM.deserialize(FSM.serialize(m));
   assert.equal(round.states.length, m.states.length);
@@ -131,7 +131,7 @@ test('parseOutputs / formatOutputs', () => {
   assert.deepEqual(plain(FSM.parseOutputs(FSM.formatOutputs({ a: '1', b: '3' }))), { a: '1', b: '3' });
 });
 
-test('toda transicion nace curva (nunca recta)', () => {
+test('every transition starts curved (never straight)', () => {
   const m = FSM.createMachine();
   const A = FSM.createState(m, 0, 0, 'A');
   const B = FSM.createState(m, 200, 0, 'B');
@@ -146,7 +146,7 @@ test('toda transicion nace curva (nunca recta)', () => {
   assert.equal(loop.curve, 0);                            // loops use an angle, not curvature
 });
 
-test('migracion: aristas antiguas rectas (curve 0) pasan a arco', () => {
+test('migration: legacy straight edges (curve 0) become arcs', () => {
   const legacy = {
     states: [{ id: 's1', name: 'A', x: 0, y: 0 }, { id: 's2', name: 'B', x: 9, y: 0 }],
     transitions: [
@@ -160,7 +160,7 @@ test('migracion: aristas antiguas rectas (curve 0) pasan a arco', () => {
   assert.equal(FSM.getTransition(m, 't2').curve, 0);
 });
 
-test('numero de estado forzado (s.code) manda en el Verilog', () => {
+test('forced state code (s.code) controls generated Verilog', () => {
   const m = FSM.createMachine();
   const a = FSM.createState(m, 0, 0, 'A');
   const b = FSM.createState(m, 1, 0, 'B');
@@ -177,7 +177,7 @@ test('numero de estado forzado (s.code) manda en el Verilog', () => {
   assert.match(v, /C\s+= 2'b01/);
 });
 
-test('validacion: numeros de estado duplicados o fuera de rango', () => {
+test('validation: duplicate or out-of-range state codes', () => {
   const m = FSM.createMachine();
   const a = FSM.createState(m, 0, 0, 'A');
   const b = FSM.createState(m, 1, 0, 'B');
@@ -188,7 +188,7 @@ test('validacion: numeros de estado duplicados o fuera de rango', () => {
   assert.ok(errorsOf(m).some((e) => /no cabe/.test(e)));
 });
 
-test('"valores no definidos a DC" emite \'bx', () => {
+test('"unassigned values to DC" emits \'bx', () => {
   const m = FSM.createMachine();
   FSM.createPort(m, 'output', 'a');
   const pb = FSM.createPort(m, 'output', 'b'); pb.width = 4;
@@ -203,7 +203,7 @@ test('"valores no definidos a DC" emite \'bx', () => {
   assert.match(v, /S: begin[\s\S]*?b = 4'bx;[\s\S]*?a = 1'b1;/);
 });
 
-test('deserialize conserva code / radius / dcUndefined', () => {
+test('deserialize preserves code / radius / dcUndefined', () => {
   const m = FSM.demoMachine();
   m.states[1].code = 3;
   m.states[1].radius = 55;
@@ -216,7 +216,7 @@ test('deserialize conserva code / radius / dcUndefined', () => {
   assert.equal(r.transitions[0].dcUndefined, true);
 });
 
-test('FSM.EXAMPLES: ids unicos y cada ejemplo valida sin errores', () => {
+test('FSM.EXAMPLES: unique IDs and every example validates without errors', () => {
   assert.ok(FSM.EXAMPLES.length >= 2, 'al menos 2 ejemplos ademas del detector');
   const ids = FSM.EXAMPLES.map((e) => e.id);
   assert.equal(new Set(ids).size, ids.length, 'ids de ejemplo duplicados');
@@ -237,7 +237,7 @@ test('example machines are independent copies of read-only definitions', () => {
   assert.ok(Object.isFrozen(FSM.EXAMPLES[0]));
 });
 
-test('semaforo: 3 estados en ciclo, una salida Moore por estado', () => {
+test('traffic light: 3 states in a cycle, one Moore output per state', () => {
   const m = FSM.trafficLightMachine();
   assert.equal(m.states.length, 3);
   m.states.forEach((s) => assert.equal(Object.keys(s.outputs).length, 1));
@@ -253,7 +253,7 @@ test('Mealy detector: y is a transition output, not a state output', () => {
   assert.deepEqual(errorsOf(m), []);
 });
 
-test('.ice: estructura y bloque de codigo', () => {
+test('.ice: structure and code block', () => {
   const m = FSM.demoMachine();
   const ice = ICE.buildIce(m);
   assert.equal(ice.version, '1.2');
@@ -281,7 +281,7 @@ test('.ice: estructura y bloque de codigo', () => {
  * the generator emits the complement instead of a bare `else` branch.
  * ------------------------------------------------------------------------- */
 
-test('los ejemplos no dejan transiciones sin condicion', () => {
+test('examples do not leave transitions without conditions', () => {
   for (const example of FSM.EXAMPLES) {
     const m = FSM.exampleMachine(example.id);
     const vacias = m.transitions.filter((t) => String(t.cond).trim() === '');
@@ -289,14 +289,14 @@ test('los ejemplos no dejan transiciones sin condicion', () => {
   }
 });
 
-test('detector 101: cada estado decide con x y !x, sin else pelado', () => {
+test('101 detector: every state decides with x and !x, without bare else', () => {
   const v = VERILOG.generateModule(FSM.demoMachine());
   assert.ok(!/else next_state/.test(v), 'no debe quedar un "else next_state"');
   assert.match(v, /S1: begin\s*\n\s*if \(!x\) next_state = S10;\s*\n\s*else if \(x\) next_state = S1;/);
   assert.match(v, /S101: begin\s*\n\s*if \(x\) next_state = S1;\s*\n\s*else if \(!x\) next_state = S0;/);
 });
 
-test('transicion sin condicion: se emite el complemento de las anteriores', () => {
+test('unconditional transition: emits the complement of prior conditions', () => {
   const m = FSM.createMachine();
   FSM.createPort(m, 'input', 'x');
   const a = FSM.createState(m, 0, 0, 'A');
@@ -309,7 +309,7 @@ test('transicion sin condicion: se emite el complemento de las anteriores', () =
   assert.ok(!/else next_state/.test(v));
 });
 
-test('complemento de varias condiciones y de una compuesta', () => {
+test('complement of multiple and compound conditions', () => {
   const m = FSM.createMachine();
   FSM.createPort(m, 'input', 'a');
   FSM.createPort(m, 'input', 'b');
@@ -327,18 +327,18 @@ test('complemento de varias condiciones y de una compuesta', () => {
  * `default` appears only when it is actually needed.
  * ------------------------------------------------------------------------- */
 
-test('sin default en el proximo estado si los codigos estan todos cubiertos', () => {
+test('no next-state default when all codes are covered', () => {
   const v = VERILOG.generateModule(FSM.demoMachine());   // 4 estados en 2 bits
   const proximo = v.slice(v.indexOf('// 2)'), v.indexOf('// 3)'));
   assert.ok(!/default:/.test(proximo), 'el case de proximo estado no deberia llevar default:\n' + proximo);
 });
 
-test('con default si quedan codigos sin usar', () => {
+test('default when unused codes remain', () => {
   const v = VERILOG.generateModule(FSM.trafficLightMachine()); // 3 estados en 2 bits
   assert.match(v, /default: next_state = RED;/);
 });
 
-test('el case de salidas cierra con una rama por defecto explicita y vacia', () => {
+test('output case ends with an explicit empty default branch', () => {
   for (const example of FSM.EXAMPLES) {
     const v = VERILOG.generateModule(FSM.exampleMachine(example.id));
     const salidas = v.slice(v.indexOf('// 3)'));
@@ -347,7 +347,7 @@ test('el case de salidas cierra con una rama por defecto explicita y vacia', () 
   }
 });
 
-test('one-hot: siempre hace falta default (quedan codigos sin usar)', () => {
+test('one-hot: default is always needed (unused codes remain)', () => {
   const m = FSM.demoMachine();
   m.encoding = 'onehot';
   const v = VERILOG.generateModule(m);

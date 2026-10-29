@@ -96,7 +96,7 @@ test('inside Icestudio: active() and host bus()', () => {
   assert.equal(s.PLUGIN.bus(), hostBus);
 });
 
-test('onIcestudioPluginLoaded vacia la cola de ready()', () => {
+test('onIcestudioPluginLoaded flushes the ready() queue', () => {
   const s = load({ opener: { iceStudio: { bus: {} } } });
   const orden = [];
   s.PLUGIN.ready(() => orden.push('a'));
@@ -108,7 +108,7 @@ test('onIcestudioPluginLoaded vacia la cola de ready()', () => {
   assert.deepEqual(orden, ['a', 'b', 'c'], 'despues de listo se ejecuta al vuelo');
 });
 
-test('saveFile abre el dialogo nativo y escribe el destino elegido', () => {
+test('saveFile opens the native dialog and writes the chosen destination', () => {
   const escrito = [];
   const fakeFs = { writeFileSync: (p, c) => escrito.push([p, c]) };
   const doc = fakeDocument();
@@ -126,7 +126,7 @@ test('saveFile abre el dialogo nativo y escribe el destino elegido', () => {
   assert.equal(doc.body.children.length, 0, 'el input se retira del DOM');
 });
 
-test('saveFile: si el usuario cancela no escribe nada', () => {
+test('saveFile: user cancellation writes nothing', () => {
   const escrito = [];
   const doc = fakeDocument();
   const s = load({
@@ -141,7 +141,7 @@ test('saveFile: si el usuario cancela no escribe nada', () => {
   assert.deepEqual(escrito, []);
 });
 
-test('saveFile: un fallo de escritura se avisa, no se propaga', () => {
+test('saveFile: write failure is reported instead of propagated', () => {
   const doc = fakeDocument();
   const s = load({
     opener: { iceStudio: { bus: {} } },
@@ -157,7 +157,7 @@ test('saveFile: un fallo de escritura se avisa, no se propaga', () => {
   assert.deepEqual(avisos, [['disco lleno', true]]);
 });
 
-test('sin Node (navegador con opener falso) saveFile cede el paso', () => {
+test('without Node (browser with a false opener), saveFile falls back', () => {
   const s = load({ opener: { iceStudio: { bus: {} } }, require: undefined });
   assert.equal(s.PLUGIN.saveFile('x.ice', '{}'), false);
 });

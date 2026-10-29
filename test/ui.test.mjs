@@ -66,7 +66,7 @@ const edgePoint = (page, i, frac = 0.5) => page.evaluate(([idx, f]) => {
   return { x: q.x * m.a + q.y * m.c + m.e, y: q.x * m.b + q.y * m.d + m.f };
 }, [i, frac]);
 
-test('arranca con el ejemplo, sin errores de consola', async () => {
+test('starts with the example and no console errors', async () => {
   const { page, errors } = await openEditor();
   assert.equal(await nodeCount(page), 4, '4 estados en el ejemplo');
   assert.equal(await edgeCount(page), 7, '7 transiciones en el ejemplo');
@@ -75,7 +75,7 @@ test('arranca con el ejemplo, sin errores de consola', async () => {
   await page.close();
 });
 
-test('no existe la exportacion de coleccion; si el resto', async () => {
+test('collection export does not exist; other exports do', async () => {
   const { page } = await openEditor();
   assert.equal(await page.locator('#btn-export-zip').count(), 0);
   assert.equal(await page.locator('#btn-export-v').count(), 1);
@@ -84,7 +84,7 @@ test('no existe la exportacion de coleccion; si el resto', async () => {
   await page.close();
 });
 
-test('la barra ya no tiene "Editar...", "Ajustar vista", "Atajos" ni "Seleccionar"; el widget flotante de zoom funciona', async () => {
+test('toolbar omits removed controls and the floating zoom widget works', async () => {
   const { page, errors } = await openEditor();
   assert.equal(await page.locator('#btn-edit').count(), 0);
   assert.equal(await page.locator('#btn-fit').count(), 0);
@@ -108,7 +108,7 @@ test('la barra ya no tiene "Editar...", "Ajustar vista", "Atajos" ni "Selecciona
   await page.close();
 });
 
-test('boton "+ Estado" + clic crea un estado y abre su dialogo', async () => {
+test('the "+ State" button and a click create a state and open its dialog', async () => {
   const { page, errors } = await openEditor();
   const before = await nodeCount(page);
   await page.click('#mode-state');
@@ -126,7 +126,7 @@ test('boton "+ Estado" + clic crea un estado y abre su dialogo', async () => {
   await page.close();
 });
 
-test('los atajos de modo actualizan el boton activo', async () => {
+test('mode shortcuts update the active button', async () => {
   const { page } = await openEditor();
   await page.keyboard.press('s');
   assert.equal(await page.locator('#mode-state').evaluate((el) => el.classList.contains('active')), true);
@@ -138,7 +138,7 @@ test('los atajos de modo actualizan el boton activo', async () => {
   await page.close();
 });
 
-test('doble clic y tecla Enter abren el dialogo del elemento seleccionado', async () => {
+test('double-click and Enter open the selected element dialog', async () => {
   const { page, errors } = await openEditor();
 
   // doble clic sobre un estado abre el dialogo
@@ -161,7 +161,7 @@ test('doble clic y tecla Enter abren el dialogo del elemento seleccionado', asyn
 });
 
 
-test('menu "Archivo" (con submenus "Cargar ejemplo" y "Exportar"): oculto por defecto, se abre/cierra y ejecuta su accion', async () => {
+test('File menu: hidden by default, opens/closes, and runs its actions', async () => {
   const { page, errors } = await openEditor();
 
   assert.equal(await page.locator('#menu-file-panel').isHidden(), true);
@@ -199,7 +199,7 @@ test('menu "Archivo" (con submenus "Cargar ejemplo" y "Exportar"): oculto por de
   await page.close();
 });
 
-test('exportar/guardar desde el menu Archivo descargan con el nombre y extension correctos', async () => {
+test('exporting and saving from File download the correct name and extension', async () => {
   const { page } = await openEditor();
 
   await page.click('#menu-file-btn');
@@ -315,7 +315,7 @@ const waitStable = async (page, ms = 150, tries = 50) => {
 const stored = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('fsm-editor:autosave') || 'null'));
 const storedTr = async (page, idx) => (await stored(page)).transitions[idx];
 
-test('[curvas] no hay selector de lineas; cada transicion es UN arco de circunferencia y cada bucle una cubica', async () => {
+test('[curves] no line selector; every transition is a circular arc and every loop is cubic', async () => {
   const { page, errors } = await openEditor();
   assert.equal(await page.locator('#line-style').count(), 0, 'el desplegable de lineas ya no existe');
   await waitStable(page);
@@ -330,7 +330,7 @@ test('[curvas] no hay selector de lineas; cada transicion es UN arco de circunfe
   await page.close();
 });
 
-test('[curvas] el ejemplo se asienta rapido, sin atravesar estados y todas con curvatura', async () => {
+test('[curves] the example settles quickly without crossing states and all curves bend', async () => {
   const { page } = await openEditor();
   await waitStable(page);
   // El grafo del ejemplo son 7 transiciones sobre 4 estados. Se tolera un
@@ -362,7 +362,7 @@ test('[curvas] el ejemplo se asienta rapido, sin atravesar estados y todas con c
   await page.close();
 });
 
-test('[curvas] S0 -> S1 se combea hacia AFUERA (lejos del resto de estados), no hacia adentro', async () => {
+test('[curves] S0 -> S1 bends OUTWARD, away from the remaining states', async () => {
   const { page } = await openEditor();
   await waitStable(page);
   const dot = await page.evaluate(() => {
@@ -384,7 +384,7 @@ test('[curvas] S0 -> S1 se combea hacia AFUERA (lejos del resto de estados), no 
   await page.close();
 });
 
-test('[curvas] arrastrar la propia linea la curva y la fija a mano; la fisica ya no la mueve; se puede volver a automatica', async () => {
+test('[curves] dragging a line curves and pins it; physics can be restored', async () => {
   const { page, errors } = await openEditor();
   await waitStable(page);
   await page.waitForFunction(() => !!localStorage.getItem('fsm-editor:autosave'));
@@ -418,7 +418,7 @@ test('[curvas] arrastrar la propia linea la curva y la fija a mano; la fisica ya
   await page.close();
 });
 
-test('[curvas] mover S101 junto a S0 (caso reportado): las curvas se reacomodan solas y no se cruzan', async () => {
+test('[curves] moving S101 near S0 readjusts curves without crossings', async () => {
   const { page, errors } = await openEditor();
   await waitStable(page);
   const s0 = await centerOf(page.locator('#canvas .layer-nodes .state').nth(0).locator('.body'));
@@ -437,7 +437,7 @@ test('[curvas] mover S101 junto a S0 (caso reportado): las curvas se reacomodan 
   await page.close();
 });
 
-test('[curvas] durante el arrastre de un estado las flechas siguen unidas a su borde', async () => {
+test('[curves] while dragging a state, arrows remain attached to its boundary', async () => {
   const { page } = await openEditor();
   await waitStable(page);
   const { x, y } = await centerOf(page.locator('#canvas .layer-nodes .state').nth(3).locator('.body'));
@@ -461,7 +461,7 @@ test('[curvas] durante el arrastre de un estado las flechas siguen unidas a su b
   await page.close();
 });
 
-test('[curvas] dialogo de transicion: curvatura vacia = automatica; un numero la fija', async () => {
+test('[curves] transition dialog: empty curvature is automatic; a number pins it', async () => {
   const { page, errors } = await openEditor();
   await waitStable(page);
   await page.waitForFunction(() => !!localStorage.getItem('fsm-editor:autosave'));
@@ -490,7 +490,7 @@ test('[curvas] dialogo de transicion: curvatura vacia = automatica; un numero la
   await page.close();
 });
 
-test('doble clic en el fondo crea un estado y abre su dialogo', async () => {
+test('double-clicking the background creates a state and opens its dialog', async () => {
   const { page, errors } = await openEditor();
   const before = await nodeCount(page);
   const c = await page.locator('#canvas').boundingBox();
@@ -505,7 +505,7 @@ test('doble clic en el fondo crea un estado y abre su dialogo', async () => {
   await page.close();
 });
 
-test('arrastrar un estado lo mueve y persiste', async () => {
+test('dragging a state moves it and persists the change', async () => {
   const { page } = await openEditor();
   const node = page.locator('#canvas .layer-nodes .state').first();
   const t0 = await node.getAttribute('transform');
@@ -529,7 +529,7 @@ test('arrastrar un estado lo mueve y persiste', async () => {
   await page.close();
 });
 
-test('shift + arrastrar entre estados crea una transicion', async () => {
+test('Shift + drag between states creates a transition', async () => {
   const { page, errors } = await openEditor();
   const before = await edgeCount(page);
   const nodes = page.locator('#canvas .layer-nodes .state');
@@ -552,7 +552,7 @@ test('shift + arrastrar entre estados crea una transicion', async () => {
   await page.close();
 });
 
-test('la pestana Salida muestra el Verilog y reacciona al modelo', async () => {
+test('the Output tab displays Verilog and reacts to model changes', async () => {
   const { page } = await openEditor();
   await page.getByText('Output', { exact: true }).click();
   await page.waitForSelector('#panel-code.active');
@@ -573,7 +573,7 @@ test('la pestana Salida muestra el Verilog y reacciona al modelo', async () => {
   await page.close();
 });
 
-test('cambiar el nombre del modulo se refleja en el Verilog', async () => {
+test('changing the module name is reflected in Verilog', async () => {
   const { page } = await openEditor();
   await page.fill('#mod-name', 'mi_fsm');
   await page.locator('#mod-name').press('Tab');
@@ -583,7 +583,7 @@ test('cambiar el nombre del modulo se refleja en el Verilog', async () => {
   await page.close();
 });
 
-test('anadir una entrada y usarla en una condicion', async () => {
+test('adding an input and using it in a condition', async () => {
   const { page, errors } = await openEditor();
   await page.click('#btn-add-input');
   const lastName = page.locator('#inputs-list .port-row .port-name').last();
@@ -605,7 +605,7 @@ test('anadir una entrada y usarla en una condicion', async () => {
   await page.close();
 });
 
-test('doble clic en un estado: dialogo con etiqueta y numero de estado', async () => {
+test('double-clicking a state opens a dialog with label and state code', async () => {
   const { page, errors } = await openEditor();
   await page.locator('#canvas .layer-nodes .state .body').first().dblclick();
   await page.waitForSelector('.modal-overlay');
@@ -625,7 +625,7 @@ test('doble clic en un estado: dialogo con etiqueta y numero de estado', async (
   await page.close();
 });
 
-test('doble clic en una transicion: dialogo de condicion', async () => {
+test('double-clicking a transition opens the condition dialog', async () => {
   const { page, errors } = await openEditor();
   const ep = await edgePoint(page, 0, 0.3);
   await page.mouse.dblclick(ep.x, ep.y);
@@ -646,7 +646,7 @@ test('doble clic en una transicion: dialogo de condicion', async () => {
 
 /* ---- deshacer / rehacer, duplicar, atajos, importar Verilog --------------- */
 
-test('Ctrl+Z / Ctrl+Y deshacen y rehacen crear un estado; los botones reflejan el historial', async () => {
+test('Ctrl+Z / Ctrl+Y undo and redo state creation; buttons reflect history', async () => {
   const { page, errors } = await openEditor();
   const before = await nodeCount(page);
   assert.equal(await page.locator('#btn-undo').isDisabled(), true, 'sin historial al abrir');
@@ -670,7 +670,7 @@ test('Ctrl+Z / Ctrl+Y deshacen y rehacen crear un estado; los botones reflejan e
   await page.close();
 });
 
-test('Ctrl+D duplica el estado seleccionado', async () => {
+test('Ctrl+D duplicates the selected state', async () => {
   const { page } = await openEditor();
   const before = await nodeCount(page);
   await page.locator('#canvas .layer-nodes .state').first().locator('.body').click();
@@ -680,7 +680,7 @@ test('Ctrl+D duplica el estado seleccionado', async () => {
   await page.close();
 });
 
-test('la tecla ? abre un dialogo informativo con los atajos', async () => {
+test('the ? key opens an informational shortcut dialog', async () => {
   const { page, errors } = await openEditor();
   await page.locator('#canvas').focus().catch(() => {});
   await page.keyboard.press('?');
@@ -692,7 +692,7 @@ test('la tecla ? abre un dialogo informativo con los atajos', async () => {
   await page.close();
 });
 
-test('Importar desde Verilog: el .v exportado del demo reconstruye el mismo diagrama', async () => {
+test('Import from Verilog: the demo .v rebuilds the same diagram', async () => {
   const { page, errors } = await openEditor();
   await waitStable(page);
   await page.waitForFunction(() => !!localStorage.getItem('fsm-editor:autosave'));
@@ -714,7 +714,7 @@ test('Importar desde Verilog: el .v exportado del demo reconstruye el mismo diag
   await page.close();
 });
 
-test('Importar el "Cuerpo .v" (sin module) da un error explicativo, no una pantalla rota', async () => {
+test('Importing a body-only .v shows a clear error instead of breaking the UI', async () => {
   const { page, errors } = await openEditor();
   await page.waitForFunction(() => !!localStorage.getItem('fsm-editor:autosave'));
   const body = await page.evaluate(() => VERILOG.generateBody(JSON.parse(localStorage.getItem('fsm-editor:autosave'))));
@@ -728,7 +728,7 @@ test('Importar el "Cuerpo .v" (sin module) da un error explicativo, no una panta
 
 /* ---- consola inferior, tabla de transicion, panel de propiedades, idioma, ayuda --- */
 
-test('consola de problemas: colapsada por defecto, acotada al area de trabajo, se expande/colapsa y se abre sola', async () => {
+test('problem console: collapsed by default, bounded to work area, expands and opens automatically', async () => {
   const { page, errors } = await openEditor();
   assert.equal(await page.locator('#problems').count(), 0, 'el panel lateral de validacion ya no existe');
   assert.equal(await page.locator('#console-bar').count(), 1);
@@ -760,7 +760,7 @@ test('consola de problemas: colapsada por defecto, acotada al area de trabajo, s
   await page.close();
 });
 
-test('tabla de transicion de estados: vive en la pestana "Salida", refleja estados, condiciones, siguiente y salidas', async () => {
+test('state transition table: lives in Output and reflects states, conditions, next state, and outputs', async () => {
   const { page, errors } = await openEditor();
   // vive en "Salida", no en "Propiedades" (la pestana activa por defecto)
   assert.equal(await page.locator('#panel-props #transition-table').count(), 0);
@@ -789,29 +789,29 @@ test('tabla de transicion de estados: vive en la pestana "Salida", refleja estad
   await page.close();
 });
 
-test('tabla: la salida Mealy se muestra junto al estado siguiente', async () => {
+test('table: the Mealy output appears alongside the destination state', async () => {
   const { page, errors } = await openEditor();
   await page.locator('#menu-file-btn').click();
   await page.getByText('Load example', { exact: true }).click();
-  await page.getByText('Puerta con clave (Mealy)', { exact: true }).click();
+  await page.getByText('Mealy sequence detector (101)', { exact: true }).click();
   await page.getByText('Output', { exact: true }).click();
   await page.waitForSelector('#transition-table table');
 
-  const fila = page.locator('#transition-table tbody tr').filter({ hasText: 'abierto=1' }).first();
+  const fila = page.locator('#transition-table tbody tr').filter({ hasText: 'y=1' }).first();
   const celdas = fila.locator('td');
-  // la salida Mealy cuelga del estado siguiente, en la misma celda
+  // The Mealy output appears next to the destination state in the same cell.
   const siguiente = await fila.locator('td .next-mealy').textContent();
-  assert.match(siguiente, /abierto=1/);
+  assert.match(siguiente, /y=1/);
   const textoSiguiente = await celdas.nth(await celdas.count() - 2).textContent();
-  assert.match(textoSiguiente, /CLAVE_AB, abierto=1/, 'estado siguiente y salida juntos');
+  assert.match(textoSiguiente, /S1, y=1/, 'destination state and output appear together');
 
-  // y no aparece en la columna de salidas, que es la de Moore
-  assert.doesNotMatch(await page.locator('#transition-table tbody td.out-cell').first().textContent(), /abierto/);
+  // It does not appear in the Moore-output column.
+  assert.doesNotMatch(await page.locator('#transition-table tbody td.out-cell').first().textContent(), /y/);
   assert.deepEqual(errors, []);
   await page.close();
 });
 
-test('el dialogo de ayuda usa la variante ancha', async () => {
+test('the help dialog uses the wide variant', async () => {
   const { page, errors } = await openEditor();
   await page.locator('#btn-help').click();
   const card = page.locator('.modal-card');
@@ -832,15 +832,15 @@ test('el dialogo de ayuda usa la variante ancha', async () => {
   await page.close();
 });
 
-test('panel Modulo: ya no dice "(recomendado para iCE40)" junto a reset sincrono', async () => {
+test('Module panel omits the obsolete synchronous-reset recommendation', async () => {
   const { page } = await openEditor();
   const text = await page.locator('#panel-props .block').first().textContent();
   assert.doesNotMatch(text, /recomendado para iCE40/);
-  assert.match(text, /[Rr]eset s[ií]ncrono/);
+  assert.match(text, /Synchronous reset/);
   await page.close();
 });
 
-test('selector de idioma: cambiar a EN traduce la barra y el panel; guarda la preferencia', async () => {
+test('language selector: switching to EN translates toolbar and panel and saves preference', async () => {
   const { page, errors } = await openEditor();
   assert.match(await page.locator('#menu-file-btn').textContent(), /File/);
   await page.selectOption('#lang-select', 'en');
@@ -856,7 +856,7 @@ test('selector de idioma: cambiar a EN traduce la barra y el panel; guarda la pr
   await page.close();
 });
 
-test('boton Ayuda: abre un dialogo con Moore vs Mealy y como usarlo', async () => {
+test('Help button opens a dialog about Moore vs. Mealy and usage', async () => {
   const { page, errors } = await openEditor();
   assert.equal((await page.locator('#btn-help').textContent()).trim(), '?', 'solo el icono, sin texto "Ayuda"');
   await page.click('#btn-help');
@@ -870,16 +870,16 @@ test('boton Ayuda: abre un dialogo con Moore vs Mealy y como usarlo', async () =
   await page.close();
 });
 
-test('Cargar ejemplo: lista al menos 3 ejemplos y el "Semáforo" carga 3 estados', async () => {
+test('Load example: lists at least three examples and Traffic light loads three states', async () => {
   const { page, errors } = await openEditor();
   await page.click('#menu-file-btn');
   await page.click('#menu-examples-btn');
   const items = page.locator('#menu-examples-panel button');
   assert.ok(await items.count() >= 3);
   const labels = await items.allTextContents();
-  const semaforo = labels.findIndex((t) => /sem[aá]foro/i.test(t));
-  assert.ok(semaforo >= 0, 'el semaforo esta en la lista: ' + JSON.stringify(labels));
-  await items.nth(semaforo).click();
+  const trafficLight = labels.findIndex((t) => /traffic light/i.test(t));
+  assert.ok(trafficLight >= 0, 'Traffic light is in the list: ' + JSON.stringify(labels));
+  await items.nth(trafficLight).click();
   await page.waitForFunction(() => document.querySelectorAll('#canvas .layer-nodes .state').length === 3);
   assert.equal(await nodeCount(page), 3);
   assert.deepEqual(errors, []);
