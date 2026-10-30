@@ -1,9 +1,18 @@
 {
   "name": "fsm-editor",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "main": "electron/main.cjs",
   "description": "Visual finite-state-machine editor with Verilog and Icestudio export",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lmcapacho/FSMEditor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lmcapacho/FSMEditor/issues"
+  },
+  "homepage": "https://github.com/lmcapacho/FSMEditor#readme",
   "engines": {
     "node": ">=20"
   },

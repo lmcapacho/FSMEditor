@@ -261,6 +261,51 @@
     return Object.keys(map || {}).map(function (k) { return k + '=' + map[k]; }).join(', ');
   }
 
+  /* Declares ports referenced by the machine so generated HDL stays complete. */
+  function syncPortsFromUsage(machine) {
+    var known = {};
+    var changed = false;
+    var usedInputs = {};
+    var usedOutputs = {};
+    known[machine.clock] = true;
+    known[machine.reset] = true;
+    machine.inputs.concat(machine.outputs).forEach(function (port) { known[port.name] = true; });
+
+    machine.states.concat(machine.transitions).forEach(function (item) {
+      Object.keys(item.outputs || {}).forEach(function (name) {
+        if (isIdentifier(name)) usedOutputs[name] = true;
+        if (!known[name] && isIdentifier(name)) {
+          var output = createPort(machine, 'output', name);
+          output.autoInferred = true;
+          known[name] = true;
+          changed = true;
+        }
+      });
+    });
+    machine.transitions.forEach(function (transition) {
+      identifiersIn(transition.cond).forEach(function (name) {
+        usedInputs[name] = true;
+        if (!known[name]) {
+          var input = createPort(machine, 'input', name);
+          input.autoInferred = true;
+          known[name] = true;
+          changed = true;
+        }
+      });
+    });
+    machine.inputs = machine.inputs.filter(function (port) {
+      if (!port.autoInferred || usedInputs[port.name]) return true;
+      changed = true;
+      return false;
+    });
+    machine.outputs = machine.outputs.filter(function (port) {
+      if (!port.autoInferred || usedOutputs[port.name]) return true;
+      changed = true;
+      return false;
+    });
+    return changed;
+  }
+
   /* ----------------------------------------------------------------------- */
   /* Validation                                                              */
   /* ----------------------------------------------------------------------- */
@@ -386,14 +431,20 @@
     if (['binary', 'gray', 'onehot'].indexOf(m.encoding) === -1) m.encoding = 'binary';
 
     (raw.inputs || []).forEach(function (p) {
-      m.inputs.push({ id: p.id || uid('in'), name: String(p.name || 'in'), width: Math.max(1, parseInt(p.width, 10) || 1) });
+      m.inputs.push({
+        id: p.id || uid('in'),
+        name: String(p.name || 'in'),
+        width: Math.max(1, parseInt(p.width, 10) || 1),
+        autoInferred: !!p.autoInferred
+      });
     });
     (raw.outputs || []).forEach(function (p) {
       m.outputs.push({
         id: p.id || uid('out'),
         name: String(p.name || 'out'),
         width: Math.max(1, parseInt(p.width, 10) || 1),
-        def: p.def == null ? '0' : String(p.def)
+        def: p.def == null ? '0' : String(p.def),
+        autoInferred: !!p.autoInferred
       });
     });
     (raw.states || []).forEach(function (s) {
@@ -491,6 +542,7 @@
     identifiersIn: identifiersIn,
     parseOutputs: parseOutputs,
     formatOutputs: formatOutputs,
+    syncPortsFromUsage: syncPortsFromUsage,
     stateBits: stateBits,
     validate: validate,
     serialize: serialize,

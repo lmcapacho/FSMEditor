@@ -131,6 +131,35 @@ test('parseOutputs / formatOutputs', () => {
   assert.deepEqual(plain(FSM.parseOutputs(FSM.formatOutputs({ a: '1', b: '3' }))), { a: '1', b: '3' });
 });
 
+test('syncPortsFromUsage declares condition inputs and assigned outputs', () => {
+  const m = FSM.createMachine();
+  const idle = FSM.createState(m, 0, 0, 'IDLE');
+  const run = FSM.createState(m, 100, 0, 'RUN');
+  m.initial = idle.id;
+  idle.outputs.ready = '1';
+  const transition = FSM.createTransition(m, idle.id, run.id, 'start && enable');
+  transition.outputs.busy = '1';
+  FSM.syncPortsFromUsage(m);
+  assert.deepEqual(plain(m.inputs.map((p) => p.name).sort()), ['enable', 'start']);
+  assert.deepEqual(plain(m.outputs.map((p) => p.name).sort()), ['busy', 'ready']);
+  assert.equal(FSM.syncPortsFromUsage(m), false, 'a second synchronization changes nothing');
+  const restored = FSM.deserialize(FSM.serialize(m));
+  const restoredIdle = FSM.getState(restored, idle.id);
+  const restoredTransition = FSM.getTransition(restored, transition.id);
+  restoredTransition.cond = '';
+  delete restoredIdle.outputs.ready;
+  delete restoredTransition.outputs.busy;
+  assert.equal(FSM.syncPortsFromUsage(restored), true, 'inferred ports remain removable after restoring a machine');
+  assert.deepEqual(plain(restored.inputs), []);
+  assert.deepEqual(plain(restored.outputs), []);
+  transition.cond = '';
+  delete idle.outputs.ready;
+  delete transition.outputs.busy;
+  assert.equal(FSM.syncPortsFromUsage(m), true, 'removing usage removes inferred ports');
+  assert.deepEqual(plain(m.inputs), []);
+  assert.deepEqual(plain(m.outputs), []);
+});
+
 test('every transition starts curved (never straight)', () => {
   const m = FSM.createMachine();
   const A = FSM.createState(m, 0, 0, 'A');

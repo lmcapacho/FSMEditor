@@ -42,7 +42,7 @@ machines. Editing or saving one never changes its original example file.
 | Create a transition | Drag from a state edge, `Shift` + drag, or select **+ Transition** |
 | Edit | Double-click, or select an item and press `Enter` |
 | Move | Drag a state; hold `Alt` to disable grid snapping |
-| Curve a transition | Drag its line or its blue selection handle |
+| Curve a transition | Drag its line or edit its curvature in the transition dialog |
 | Delete / duplicate | `Delete` or `Backspace` / `Ctrl+D` |
 | Undo / redo | `Ctrl+Z` / `Ctrl+Y` or `Ctrl+Shift+Z` |
 | Save / open / new | `Ctrl+S` / `Ctrl+O` / `Ctrl+N` |

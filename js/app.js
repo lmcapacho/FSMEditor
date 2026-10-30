@@ -144,6 +144,7 @@
   }, 400);
 
   function loadMachine(machine, doFit) {
+    FSM.syncPortsFromUsage(machine);
     store.m = machine;
     undoStack.length = 0;
     redoStack.length = 0;
@@ -523,6 +524,7 @@
   }
 
   function refreshDerivedNow() {
+    if (FSM.syncPortsFromUsage(M())) refreshPortsPanel();
     refreshVerilog();
     refreshProblems();
     autosave();
