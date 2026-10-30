@@ -38,7 +38,13 @@ async function openEditor() {
   page.on('console', (m) => { if (m.type() === 'error') errors.push('console.error: ' + m.text()); });
   await page.addInitScript(() => { try { localStorage.clear(); } catch (e) {} });
   await page.goto(INDEX_URL);
+  await page.click('#menu-file-btn');
+  await page.click('#menu-examples-btn');
+  await page.locator('#menu-examples-panel button').first().click();
   await page.waitForSelector('#canvas .layer-nodes .state');
+  if (!(await page.locator('#console-bar').getAttribute('class')).includes('collapsed')) {
+    await page.click('#console-head');
+  }
   await waitStable(page);                 // la fisica de las curvas termina de asentarse
   return { page, errors };
 }

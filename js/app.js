@@ -167,6 +167,7 @@
   }, 250);
 
   function refreshAll() {
+    $('canvas-wrap').classList.toggle('empty', M().states.length === 0);
     refreshModulePanel();
     refreshPortsPanel();
     refreshTransitionTable();
@@ -551,6 +552,14 @@
         closeAll(m);
         if (!wasOpen) { panel.hidden = false; trigger.setAttribute('aria-expanded', 'true'); }
       });
+      m.addEventListener('pointerenter', function () {
+        var parent = m.parentElement && m.parentElement.closest('.menu');
+        if (parent && !parent.querySelector('.menu-panel').hidden) {
+          closeAll(m);
+          panel.hidden = false;
+          trigger.setAttribute('aria-expanded', 'true');
+        }
+      });
       // Clicking an action closes its menu after its own listener runs.
       panel.addEventListener('click', function (evt) {
         if (evt.target.tagName === 'BUTTON') closeAll();
@@ -638,6 +647,24 @@
     $('btn-undo').addEventListener('click', undo);
     $('btn-redo').addEventListener('click', redo);
     $('btn-help').addEventListener('click', openHelpDialog);
+    var inspector = $('inspector');
+    $('btn-toggle-inspector').addEventListener('click', function () {
+      document.body.classList.toggle('inspector-hidden');
+      localStorage.setItem('fsm-editor:inspector-hidden', document.body.classList.contains('inspector-hidden') ? '1' : '0');
+    });
+    $('inspector-resizer').addEventListener('pointerdown', function (evt) {
+      var startX = evt.clientX, startWidth = inspector.getBoundingClientRect().width;
+      document.body.classList.add('resizing-inspector');
+      function move(e) { inspector.style.width = Math.max(260, Math.min(720, startWidth + startX - e.clientX)) + 'px'; }
+      function up() {
+        document.body.classList.remove('resizing-inspector');
+        localStorage.setItem('fsm-editor:inspector-width', inspector.style.width);
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+      }
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+    });
 
     $('btn-export-v').addEventListener('click', function () {
       download(safe(M().name) + '.v', VERILOG.generateModule(M()), 'text/plain');
@@ -838,7 +865,12 @@
       if (saved) restored = FSM.deserialize(saved);
     } catch (e) { restored = null; }
 
-    loadMachine(restored && restored.states.length ? restored : FSM.exampleMachine('detector101'), true);
+    try {
+      var width = localStorage.getItem('fsm-editor:inspector-width');
+      if (width) $('inspector').style.width = width;
+      document.body.classList.toggle('inspector-hidden', localStorage.getItem('fsm-editor:inspector-hidden') === '1');
+    } catch (e) {}
+    loadMachine(restored && restored.states.length ? restored : FSM.createMachine(), true);
     EDITOR.setMode('select');
   }
 

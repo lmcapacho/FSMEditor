@@ -293,10 +293,10 @@
       seen[s.name] = true;
       if (s.code != null) {
         if (s.code < 0 || (machine.encoding !== 'onehot' && s.code > maxCode)) {
-          err('El numero de estado ' + s.code + ' de "' + s.name + '" no cabe en la codificacion actual.', { kind: 'state', id: s.id });
+          err('State code ' + s.code + ' for "' + s.name + '" does not fit the current encoding.', { kind: 'state', id: s.id });
         }
         if (seenCode[s.code] != null) {
-          err('Numero de estado duplicado (' + s.code + ') en "' + seenCode[s.code] + '" y "' + s.name + '".', { kind: 'state', id: s.id });
+          err('Duplicate state code (' + s.code + ') in "' + seenCode[s.code] + '" and "' + s.name + '".', { kind: 'state', id: s.id });
         }
         seenCode[s.code] = s.name;
       }
@@ -309,10 +309,10 @@
       if (!isIdentifier(p.name)) err('Port "' + p.name + '" is not a valid identifier.');
       else if (ports[p.name]) err('Duplicate port name: "' + p.name + '".');
       ports[p.name] = 'port';
-      if (!(p.width >= 1)) err('El ancho de "' + p.name + '" debe ser >= 1.');
+      if (!(p.width >= 1)) err('Width of "' + p.name + '" must be >= 1.');
     });
-    if (ports.state) warn('Hay un puerto llamado "state"; colisiona con el registro de estado (se renombrara).');
-    if (ports.next_state) warn('Hay un puerto llamado "next_state"; colisiona con el registro interno (se renombrara).');
+    if (ports.state) warn('A port named "state" collides with the state register and will be renamed.');
+    if (ports.next_state) warn('A port named "next_state" collides with the internal register and will be renamed.');
 
     if (machine.initial) {
       var reached = {};
@@ -324,7 +324,7 @@
         outgoing(machine, cur).forEach(function (t) { stack.push(t.to); });
       }
       machine.states.forEach(function (s) {
-        if (!reached[s.id]) warn('El estado "' + s.name + '" no es alcanzable desde el estado inicial.', { kind: 'state', id: s.id });
+        if (!reached[s.id]) warn('State "' + s.name + '" is unreachable from the initial state.', { kind: 'state', id: s.id });
       });
     }
 
@@ -337,14 +337,14 @@
     machine.states.forEach(function (s) {
       var outs = outgoing(machine, s.id);
       if (outs.length === 0) {
-        warn('El estado "' + s.name + '" no tiene transiciones de salida (se queda bloqueado).', { kind: 'state', id: s.id });
+        warn('State "' + s.name + '" has no outgoing transitions and becomes stuck.', { kind: 'state', id: s.id });
       }
       var defaults = outs.filter(function (t) { return String(t.cond).trim() === ''; });
       if (defaults.length > 1) {
-        err('El estado "' + s.name + '" tiene ' + defaults.length + ' transiciones incondicionales; solo puede haber una.', { kind: 'state', id: s.id });
+        err('State "' + s.name + '" has ' + defaults.length + ' unconditional transitions; only one is allowed.', { kind: 'state', id: s.id });
       }
       if (defaults.length === 1 && outs.indexOf(defaults[0]) !== outs.length - 1) {
-        warn('En "' + s.name + '" la transicion incondicional deberia ser la de menor prioridad (la ultima).', { kind: 'transition', id: defaults[0].id });
+        warn('In "' + s.name + '" the unconditional transition should have the lowest priority (last).', { kind: 'transition', id: defaults[0].id });
       }
     });
 
@@ -352,13 +352,13 @@
       var from = getState(machine, t.from);
       var to = getState(machine, t.to);
       var label = (from ? from.name : '?') + ' -> ' + (to ? to.name : '?');
-      if (!from || !to) { err('Transicion colgante ' + label + '.', { kind: 'transition', id: t.id }); return; }
+      if (!from || !to) { err('Dangling transition ' + label + '.', { kind: 'transition', id: t.id }); return; }
       var cond = String(t.cond).trim();
       if (cond !== '') {
-        if (!balancedParens(cond)) err('Parentesis desbalanceados en la condicion de ' + label + '.', { kind: 'transition', id: t.id });
+        if (!balancedParens(cond)) err('Unbalanced parentheses in the condition for ' + label + '.', { kind: 'transition', id: t.id });
         identifiersIn(cond).forEach(function (name) {
           if (!declared[name]) {
-            warn('La condicion de ' + label + ' usa "' + name + '", que no esta declarado como entrada.', { kind: 'transition', id: t.id });
+            warn('The condition for ' + label + ' uses "' + name + '", which is not declared as an input.', { kind: 'transition', id: t.id });
           }
         });
       }

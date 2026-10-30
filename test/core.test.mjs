@@ -110,7 +110,7 @@ test('unconditional transition out of order -> warning', () => {
   FSM.createTransition(m, A.id, B.id, '');   // incondicional primero (mal)
   FSM.createTransition(m, A.id, A.id, 'x');
   FSM.createPort(m, 'input', 'x');
-  assert.ok(warningsOf(m).some((w) => /menor prioridad/.test(w)), 'esperaba aviso de prioridad');
+  assert.ok(warningsOf(m).some((w) => /lowest priority/.test(w)), 'expected priority warning');
 });
 
 test('serialize / deserialize is idempotent', () => {
@@ -183,9 +183,9 @@ test('validation: duplicate or out-of-range state codes', () => {
   const b = FSM.createState(m, 1, 0, 'B');
   m.initial = a.id;
   a.code = 1; b.code = 1;
-  assert.ok(errorsOf(m).some((e) => /duplicado/.test(e)));
+  assert.ok(errorsOf(m).some((e) => /Duplicate state code/.test(e)));
   b.code = 9;   // no cabe en 1 bit (2 estados -> width 1, max 1)
-  assert.ok(errorsOf(m).some((e) => /no cabe/.test(e)));
+  assert.ok(errorsOf(m).some((e) => /does not fit/.test(e)));
 });
 
 test('"unassigned values to DC" emits \'bx', () => {
