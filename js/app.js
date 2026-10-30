@@ -301,7 +301,7 @@
         var cond = String(t.cond).trim();
         var row = h('tr', {}, [
           i === 0 ? stateCell(s, outs.length) : null,
-          h('td', { text: cond === '' ? I18N.t('table.rest') : cond }),
+          h('td', { class: cond === '' ? 'muted' : '', text: cond || '—' }),
           nextCell(to, FSM.formatOutputs(t.outputs)),
           i === 0 ? mooreCell(moore, outs.length) : null
         ].filter(function (c) { return c; }));

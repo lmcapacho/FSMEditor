@@ -264,9 +264,9 @@
 
   function edgeLabelText(m, t) {
     var cond = String(t.cond).trim();
-    var base = cond === '' ? 'else' : cond;
+    var base = cond;
     var outs = outputsLabel(t.outputs);
-    return outs ? (base + ' / ' + outs) : base;
+    return base && outs ? (base + ' / ' + outs) : (base || outs);
   }
 
   /* Transition geometry, entirely in world coordinates:
@@ -340,13 +340,6 @@
         ' L ' + (ax + ARROW * Math.cos(a1)) + ' ' + (ay + ARROW * Math.sin(a1)) +
         ' L ' + (ax + ARROW * Math.cos(a2)) + ' ' + (ay + ARROW * Math.sin(a2)) + ' Z'
     }));
-
-    if (selected && G.handle) {
-      g.appendChild(el('circle', {
-        class: 'curve-handle', r: 6, cx: G.handle.x, cy: G.handle.y,
-        title: G.loop ? 'drag to rotate the loop' : 'drag to curve manually'
-      }));
-    }
 
     var label = edgeLabelText(m, t);
     var tnode = txt(label, { class: 'edge-label', 'text-anchor': 'middle', x: labelPos.x, y: labelPos.y + 4 });

@@ -257,12 +257,6 @@ p.muted { margin: 4px 0; }
 .layer-edges .edge.selected .head { fill: var(--accent); }
 .layer-edges .edge-label { fill: var(--text); font-size: 12px; font-family: "Cascadia Code", Consolas, ui-monospace, monospace; pointer-events: none; }
 .layer-edges .edge-label-bg { fill: var(--bg); opacity: .85; rx: 3; pointer-events: none; }
-.layer-edges .edge .curve-handle {
-  fill: var(--accent); stroke: #fff; stroke-width: 1.5;
-  cursor: move; pointer-events: all;
-}
-.layer-edges .edge .curve-handle:hover { fill: #fff; }
-
 .layer-temp { pointer-events: none; }
 .layer-temp .temp-link { stroke: var(--ok); stroke-width: 2; stroke-dasharray: 5 4; fill: none; }
 
