@@ -36,6 +36,17 @@ ipcMain.handle('fsm:save-text-file', async (event, filename, content) => {
   return true;
 });
 
+ipcMain.handle('fsm:save-binary-file', async (event, filename, bytes) => {
+  const parent = BrowserWindow.fromWebContents(event.sender);
+  const result = await dialog.showSaveDialog(parent, {
+    defaultPath: filename,
+    properties: ['createDirectory', 'showOverwriteConfirmation']
+  });
+  if (result.canceled || !result.filePath) return false;
+  await fs.writeFile(result.filePath, Buffer.from(bytes));
+  return true;
+});
+
 app.whenReady().then(() => {
   if (process.platform !== 'darwin') Menu.setApplicationMenu(null);
   createWindow();

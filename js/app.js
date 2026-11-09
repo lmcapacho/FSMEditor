@@ -93,9 +93,10 @@
        false and the standard browser download remains available. */
     if (window.PLUGIN && window.PLUGIN.saveFile(filename, content)) return;
 
-    if (window.DESKTOP && window.DESKTOP.saveTextFile) {
+    if (window.DESKTOP && ((content instanceof Uint8Array && window.DESKTOP.saveBinaryFile) || window.DESKTOP.saveTextFile)) {
       try {
-        await window.DESKTOP.saveTextFile(filename, content);
+        if (content instanceof Uint8Array && window.DESKTOP.saveBinaryFile) await window.DESKTOP.saveBinaryFile(filename, content);
+        else await window.DESKTOP.saveTextFile(filename, content);
         return;
       } catch (e) {
         alert('Could not save the file: ' + (e && e.message ? e.message : e));
@@ -106,6 +107,31 @@
     var blob = content instanceof Uint8Array
       ? new Blob([content], { type: mime || 'application/octet-stream' })
       : new Blob([content], { type: (mime || 'text/plain') + ';charset=utf-8' });
+    if (window.showSaveFilePicker) {
+      try {
+        var dot = filename.lastIndexOf('.');
+        var extension = dot === -1 ? '' : filename.slice(dot);
+        var handle = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: extension ? [{
+            description: extension.slice(1).toUpperCase() + ' file',
+            accept: (function () {
+              var type = {};
+              type[mime || 'application/octet-stream'] = [extension];
+              return type;
+            }())
+          }] : undefined
+        });
+        var writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+        // Some browsers expose the API but disallow it in this context.
+        // Fall back to their standard download behavior in that case.
+      }
+    }
     var url = URL.createObjectURL(blob);
     var a = h('a', { href: url, download: filename });
     document.body.appendChild(a);
@@ -676,6 +702,16 @@
     });
     $('btn-export-ice').addEventListener('click', function () {
       download(safe(M().name) + '.ice', ICE.iceText(M()), 'application/json');
+    });
+    $('btn-export-svg').addEventListener('click', function () {
+      download(safe(M().name) + '.svg', DIAGRAMEXPORT.svg(), 'image/svg+xml');
+    });
+    $('btn-export-png').addEventListener('click', function () {
+      DIAGRAMEXPORT.png().then(function (bytes) {
+        return download(safe(M().name) + '.png', bytes, 'image/png');
+      }).catch(function (e) {
+        alert('Could not export the diagram: ' + (e && e.message ? e.message : e));
+      });
     });
 
     $('code-view').addEventListener('change', refreshVerilog);

@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { fileURLToPath } from 'node:url';
@@ -36,7 +37,10 @@ async function openEditor() {
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push('console.error: ' + m.text()); });
-  await page.addInitScript(() => { try { localStorage.clear(); } catch (e) {} });
+  await page.addInitScript(() => {
+    try { localStorage.clear(); } catch (e) {}
+    Object.defineProperty(window, 'showSaveFilePicker', { value: undefined, configurable: true, writable: true });
+  });
   await page.goto(INDEX_URL);
   await page.click('#menu-file-btn');
   await page.click('#menu-examples-btn');
@@ -225,6 +229,53 @@ test('exporting and saving from File download the correct name and extension', a
 
   // Abrir sigue aceptando .fsm (y de paso .json por compatibilidad)
   assert.match(await page.locator('#file-input').getAttribute('accept'), /\.fsm\b/);
+  await page.close();
+});
+
+test('diagram export creates clean white SVG and high-resolution PNG files', async () => {
+  const { page } = await openEditor();
+
+  await page.click('#menu-file-btn');
+  await page.click('#menu-export-btn');
+  const [svgDownload] = await Promise.all([page.waitForEvent('download'), page.click('#btn-export-svg')]);
+  assert.match(svgDownload.suggestedFilename(), /^detector_101\.svg$/);
+  const svg = await fs.readFile(await svgDownload.path(), 'utf8');
+  assert.match(svg, /<svg/);
+  assert.match(svg, /fill="#ffffff"/);
+  assert.match(svg, /S0/);
+  assert.doesNotMatch(svg, /grid-bg|class="hit"|class="halo"/);
+  const svgWidth = Number(svg.match(/\bwidth="(\d+)"/)[1]);
+  const svgHeight = Number(svg.match(/\bheight="(\d+)"/)[1]);
+
+  await page.click('#menu-file-btn');
+  await page.click('#menu-export-btn');
+  const [pngDownload] = await Promise.all([page.waitForEvent('download'), page.click('#btn-export-png')]);
+  assert.match(pngDownload.suggestedFilename(), /^detector_101\.png$/);
+  const png = await fs.readFile(await pngDownload.path());
+  assert.deepEqual([...png.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  assert.equal(png.readUInt32BE(16), svgWidth * 2, 'PNG uses 2× SVG width');
+  assert.equal(png.readUInt32BE(20), svgHeight * 2, 'PNG uses 2× SVG height');
+  await page.close();
+});
+
+test('diagram export uses the browser save picker when available', async () => {
+  const { page } = await openEditor();
+  await page.evaluate(() => {
+    window.__savedDiagram = null;
+    window.showSaveFilePicker = async (options) => ({
+      createWritable: async () => ({
+        write: async (blob) => { window.__savedDiagram = { name: options.suggestedName, text: await blob.text() }; },
+        close: async () => {}
+      })
+    });
+  });
+  await page.click('#menu-file-btn');
+  await page.click('#menu-export-btn');
+  await page.click('#btn-export-svg');
+  await page.waitForFunction(() => window.__savedDiagram !== null);
+  const saved = await page.evaluate(() => window.__savedDiagram);
+  assert.equal(saved.name, 'detector_101.svg');
+  assert.match(saved.text, /fill="#ffffff"/);
   await page.close();
 });
 

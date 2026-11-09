@@ -29,6 +29,7 @@ Then open `http://localhost:8000`.
 - `.fsm` project files and compatible Verilog-module import.
 - Export of a complete Verilog module, Verilog body for `basic.code`, and an
   Icestudio `.ice` file.
+- White-background SVG and high-resolution PNG diagram export for reports.
 - Spanish and English user interface, with included examples.
 
 Examples are stored separately in `examples/` and are loaded as new editable
